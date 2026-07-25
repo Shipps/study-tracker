@@ -27,6 +27,20 @@
   .hero p{margin:2px 0 0;font-size:13px;opacity:.9}
   .hero .go{margin-left:auto;font-size:22px}
 
+  .navbox{border:1px solid var(--line);background:var(--card);border-radius:14px;overflow:hidden;margin-bottom:12px}
+  .navbox>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 18px}
+  .navbox>summary::-webkit-details-marker{display:none}
+  .nb-ic{width:42px;height:42px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);border-radius:11px}
+  .nb-ic svg{width:22px;height:22px}
+  .nb-txt{flex:1;display:flex;flex-direction:column;min-width:0}
+  .nb-txt b{font-size:16px}
+  .nb-txt small{color:var(--muted);font-size:12.5px}
+  .nb-count{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:2px 9px}
+  .nb-chev{color:var(--muted);transition:transform .2s}
+  .navbox[open] .nb-chev{transform:rotate(90deg)}
+  .navbox[open]>summary{border-bottom:1px solid var(--line)}
+  .nb-body{padding:12px 16px 8px}
+
   .section-h{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:24px 0 12px}
 
   .card{display:flex;gap:16px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
@@ -119,6 +133,26 @@
     <span class="go">&rarr;</span>
   </a>
 
+  <details class="navbox" id="nav-cycletests">
+    <summary>
+      <span class="nb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></span>
+      <span class="nb-txt"><b>Cycle Test Papers</b><small>Question papers for each cycle test</small></span>
+      <span class="nb-count" id="count-cycletests"></span>
+      <span class="nb-chev">&#9654;</span>
+    </summary>
+    <div class="nb-body" id="cyclepapers"><div class="sub">Loading…</div></div>
+  </details>
+
+  <details class="navbox" id="nav-assignments">
+    <summary>
+      <span class="nb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v0a2 2 0 0 1 2-2z"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6"/><path d="M9 16h6"/></svg></span>
+      <span class="nb-txt"><b>Assignments</b><small>Assignments, revision & model tests</small></span>
+      <span class="nb-count" id="count-assignments"></span>
+      <span class="nb-chev">&#9654;</span>
+    </summary>
+    <div class="nb-body" id="assignments"><div class="sub">Loading…</div></div>
+  </details>
+
   <div class="todo" id="todoGeneral"></div>
 
   <div id="upcoming"></div>
@@ -127,12 +161,6 @@
     <summary>Completed &amp; past exams</summary>
     <div id="past"></div>
   </details>
-
-  <div class="section-h">Cycle test papers</div>
-  <div id="cyclepapers"><div class="sub">Loading…</div></div>
-
-  <div class="section-h">Assignments</div>
-  <div id="assignments"><div class="sub">Loading…</div></div>
 
   <div class="backupbar">
     <span class="lbl">Backup / restore all progress &amp; to-dos (in case the database is ever cleared)</span>
@@ -309,10 +337,11 @@ async function loadFolderInto(folder, mountId, emptyMsg){
     return files;
   }catch(e){ box.innerHTML='<div class="sub">Couldn\'t load right now (GitHub API may be rate-limited — try again shortly).</div>'; return null; }
 }
-loadFolderInto('assignments','assignments','No assignments uploaded yet.');
+function setCount(id,n){ const el=document.getElementById(id); if(el) el.textContent=n?String(n):""; }
+loadFolderInto('assignments','assignments','No assignments uploaded yet.').then(files=>{ if(files) setCount('count-assignments',files.length); });
 (async function(){
   const files=await loadFolderInto('cycle-tests','cyclepapers','No cycle-test papers uploaded yet.');
-  if(files){ cyclePaperSet=new Set(files.map(f=>f.name)); render(); }   // re-render so cards get their Test paper links
+  if(files){ setCount('count-cycletests',files.length); cyclePaperSet=new Set(files.map(f=>f.name)); render(); }  // re-render so cards get their Test paper links
 })();
 
 // --- Backup / restore the whole system (all trackers + all to-dos) ---
