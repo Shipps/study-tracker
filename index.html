@@ -84,6 +84,11 @@
   .td-due.over{color:#b42318;font-weight:700}
   .td-del{border:none;background:none;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;flex:none}
   .td-empty{color:var(--muted);font-size:13px;padding:6px 2px}
+
+  .backupbar{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:22px;flex-wrap:wrap}
+  .backupbar button{padding:7px 13px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;font:inherit;color:var(--ink)}
+  .backupbar button:hover{border-color:var(--accent);color:var(--accent)}
+  .backupbar .lbl{font-size:12px;color:var(--muted);width:100%;text-align:center;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -112,6 +117,13 @@
     <summary>Completed &amp; past exams</summary>
     <div id="past"></div>
   </details>
+
+  <div class="backupbar">
+    <span class="lbl">Backup / restore all progress &amp; to-dos (in case the database is ever cleared)</span>
+    <button onclick="backupAll()">⬇ Backup all</button>
+    <button onclick="document.getElementById('restoreFile').click()">⬆ Restore all</button>
+    <input id="restoreFile" type="file" accept="application/json" style="display:none" onchange="restoreAll(event)">
+  </div>
 
   <div class="foot" id="foot"></div>
 </div>
@@ -236,6 +248,38 @@ function initTodo(opts){
   render2(); load();
 }
 initTodo({ dbUrl: TODO_DB, listId:"general", mountId:"todoGeneral", title:"To-Do" });
+
+// --- Backup / restore the whole system (all trackers + all to-dos) ---
+async function backupAll(){
+  const base=TODO_DB.replace(/\/+$/,'');
+  try{
+    const [tr,td]=await Promise.all([
+      fetch(base+"/trackers.json",{cache:'no-store'}).then(r=>r.ok?r.json():null),
+      fetch(base+"/todos.json",{cache:'no-store'}).then(r=>r.ok?r.json():null)
+    ]);
+    const data={exportedAt:new Date().toISOString(),trackers:tr||{},todos:td||{}};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download="kashika-study-backup-"+new Date().toISOString().slice(0,10)+".json"; a.click();
+  }catch(e){ alert("Couldn't read the database to back up. Check you're online and the database is reachable."); }
+}
+function restoreAll(e){
+  const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
+  rd.onload=async()=>{
+    let d; try{ d=JSON.parse(rd.result); }catch(err){ alert("That file isn't valid JSON."); return; }
+    if(!confirm("Restore will overwrite ALL current cloud progress and to-dos with this backup. Continue?")) return;
+    const base=TODO_DB.replace(/\/+$/,'');
+    try{
+      const res=await Promise.all([
+        fetch(base+"/trackers.json",{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d.trackers||{})}),
+        fetch(base+"/todos.json",{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d.todos||{})})
+      ]);
+      if(res.every(r=>r.ok)) alert("Restored. Reload any open tracker to see the data.");
+      else throw 0;
+    }catch(err){ alert("Restore failed — most likely the database write rules. Check that Firebase Rules allow writes."); }
+  };
+  rd.readAsText(f);
+}
 </script>
 </body>
 </html>
