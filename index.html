@@ -35,27 +35,31 @@
   .menu .danger{color:#b42318}
   .menu .head{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:6px 10px 2px}
 
-  /* tabs */
-  .tabs{display:flex;gap:6px;overflow-x:auto;margin:18px 0 14px;padding-bottom:4px}
-  .tab{white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:99px;
-    padding:8px 14px;cursor:pointer;font:inherit;color:var(--muted);display:flex;gap:8px;align-items:center}
-  .tab .mini{font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted)}
-  .tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
-  .tab.active .mini{color:#e8e8ff}
+  /* tabs (folder-style, attached to the content card below) */
+  .tabs{display:flex;gap:4px;overflow-x:auto;margin:20px 0 0;padding:0 2px;border-bottom:1px solid var(--line)}
+  .tab{white-space:nowrap;border:1px solid transparent;border-bottom:none;background:transparent;
+    border-radius:10px 10px 0 0;padding:11px 16px;cursor:pointer;font:inherit;color:var(--muted);font-weight:500;
+    display:flex;gap:9px;align-items:center;position:relative;top:1px;transition:background .15s,color .15s}
+  .tab:hover{color:var(--accent);background:var(--accent-soft)}
+  .tab .mini{font-variant-numeric:tabular-nums;font-size:11.5px;font-weight:600;color:var(--muted);
+    background:rgba(31,36,48,.07);padding:2px 8px;border-radius:99px}
+  .tab.active{background:var(--card);color:var(--accent);font-weight:700;
+    border-color:var(--line);border-bottom-color:var(--card);
+    box-shadow:inset 0 3px 0 var(--accent), 0 -3px 8px rgba(31,36,48,.05)}
+  .tab.active .mini{color:#fff;background:var(--accent)}
 
-  .subjbar{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:14px}
-  .barrow{display:flex;align-items:center;gap:12px}
-  .bar{height:10px;background:var(--track);border-radius:99px;overflow:hidden;flex:1}
-  .bar>span{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
-  .bar.full>span{background:var(--done)}
-  .pct{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);min-width:52px;text-align:right}
+  /* content card that the active tab connects into */
+  #panel{border:1px solid var(--line);border-top:none;background:var(--card);
+    border-radius:0 0 14px 14px;padding:6px 18px 20px;min-height:120px}
 
-  .group-title{font-size:13px;font-weight:600;color:var(--accent);padding:14px 2px 6px}
-  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .group-title{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;
+    letter-spacing:.04em;padding:16px 2px 8px}
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-bottom:6px}
   table{width:100%;border-collapse:collapse;min-width:520px}
-  th,td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);font-size:13px}
+  th,td{text-align:left;padding:9px 11px;border-top:1px solid var(--line);font-size:13px}
   thead th{border-top:0}
-  th{color:var(--muted);font-weight:600;background:#fafbff}
+  th{color:var(--muted);font-weight:600;background:#f7f8fc;font-size:12px}
+  tbody tr:hover{background:#fbfbfe}
   td.ch{min-width:190px}
   .cell{text-align:center}
   .chk{width:19px;height:19px;cursor:pointer;accent-color:var(--accent)}
@@ -125,10 +129,6 @@
       <div class="menu" id="dlmenu"><div class="head">Download progress report (PDF)</div><div id="dlitems"></div></div>
       <div class="menu" id="setmenu">
         <div class="head">Settings</div>
-        <button onclick="exportJSON();closeMenus()">Export progress (backup .json)</button>
-        <button onclick="document.getElementById('imp').click()">Import progress (.json)</button>
-        <input id="imp" type="file" accept="application/json" style="display:none" onchange="importJSON(event)">
-        <div class="sep"></div>
         <button class="danger" onclick="openReset()">Reset progress…</button>
       </div>
     </div>
@@ -136,7 +136,6 @@
 
   <div class="note" id="seednote"></div>
   <div class="tabs" id="tabs"></div>
-  <div class="subjbar" id="subjbar"></div>
   <div id="panel"></div>
   <div class="foot" id="foot"></div>
 </div>
@@ -169,7 +168,7 @@
 <div id="printReport"></div>
 
 <script>
-const SYLLABUS = {"student": "Kashika", "grade": "CBSE Class 10", "note": "Seed syllabus based on the CBSE 2025-26 course. Chapter lists (especially Hindi and English) can vary by school and by the exact NCERT edition Kashika uses, so treat this as an editable starting point and correct anything that does not match her books.", "practice_areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet"], "common_areas": ["Revision Assignments", "Weekly Test Papers / Model Test Paper"], "subjects": [{"name": "Social Science (SST)", "groups": [{"name": "History – India and the Contemporary World-II", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Book Marked Questions", "Assignment (MCQ & A-R)", "Worksheet", "Sagar's MCQ & Assertion-Reason", "Map Work"], "chapters": ["The Rise of Nationalism in Europe", "Nationalism in India", "The Making of a Global World", "The Age of Industrialisation", "Print Culture and the Modern World"]}, {"name": "Geography – Contemporary India-II", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet", "Sagar's MCQ & Assertion-Reason", "Map Work"], "chapters": ["Resources and Development", "Forest and Wildlife Resources", "Water Resources", "Agriculture", "Minerals and Energy Resources", "Manufacturing Industries", "Lifelines of National Economy"]}, {"name": "Political Science – Democratic Politics-II", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Book Marked Questions", "Assignment (MCQ & A-R)", "Worksheet", "Sagar's MCQ & Assertion-Reason"], "chapters": ["Power Sharing", "Federalism", "Gender, Religion and Caste", "Political Parties", "Outcomes of Democracy"]}, {"name": "Economics – Understanding Economic Development", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet", "Sagar's MCQ & Assertion-Reason"], "chapters": ["Development", "Sectors of the Indian Economy", "Money and Credit", "Globalisation and the Indian Economy", "Consumer Rights"]}]}, {"name": "Science", "groups": [{"name": "Chemistry", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Practical"], "chapters": ["Chemical Reactions and Equations", "Acids, Bases and Salts", "Metals and Non-metals", "Carbon and its Compounds"]}, {"name": "Biology", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Diagrams"], "chapters": ["Life Processes", "How do Organisms Reproduce?", "Heredity", "Our Environment"]}, {"name": "Physics", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Numericals"], "chapters": ["Light – Reflection and Refraction", "The Human Eye and the Colourful World", "Electricity", "Magnetic Effects of Electric Current"]}]}, {"name": "Mathematics", "areas": ["NCERT Examples", "NCERT Exercises", "RD Examples", "RD Exercises", "Worksheets"], "groups": [{"name": "", "chapters": ["Real Numbers", "Polynomials", "Pair of Linear Equations in Two Variables", "Quadratic Equations", "Arithmetic Progressions", "Triangles", "Coordinate Geometry", "Introduction to Trigonometry", "Some Applications of Trigonometry", "Circles", "Areas Related to Circles", "Surface Areas and Volumes", "Statistics", "Probability"]}]}, {"name": "English", "extra_areas": ["BBC Compacta"], "groups": [{"name": "First Flight – Prose", "chapters": ["A Letter to God", "Nelson Mandela: Long Walk to Freedom", "Two Stories about Flying", "From the Diary of Anne Frank", "Glimpses of India", "Mijbil the Otter", "Madam Rides the Bus", "The Sermon at Benares", "The Proposal"]}, {"name": "First Flight – Poetry", "chapters": ["Dust of Snow / Fire and Ice", "A Tiger in the Zoo", "How to Tell Wild Animals", "The Ball Poem", "Amanda!", "The Trees", "Fog", "The Tale of Custard the Dragon", "For Anne Gregory"]}, {"name": "Footprints Without Feet", "chapters": ["A Triumph of Surgery", "The Thief's Story", "The Midnight Visitor", "A Question of Trust", "Footprints without Feet", "The Making of a Scientist", "The Necklace", "Bholi", "The Book That Saved the Earth"]}]}, {"name": "Hindi (Course B)", "extra_areas": ["All In One"], "groups": [{"name": "Sparsh Bhag 2 – Kavya (Poetry)", "chapters": ["Saakhi – Kabir", "Pad – Meera", "Manushyata – Maithilisharan Gupt", "Parvat Pradesh Mein Paavas – Sumitranandan Pant", "Top – Veeren Dangwal", "Kar Chale Hum Fida – Kaifi Azmi", "Aatmtraan – Rabindranath Tagore"]}, {"name": "Sparsh Bhag 2 – Gadya (Prose)", "chapters": ["Bade Bhai Sahab – Premchand", "Diary Ka Ek Panna – Sitaram Seksaria", "Tataanra-Vaameero Katha – Leeladhar Mandloi", "Teesri Kasam Ke Shilpkaar Shailendra – Prahlad Agarwal", "Ab Kahan Doosron Ke Dukh Mein Shaamil Hone Wale – Nida Fazli", "Patjhar Mein Tooti Pattiyaan – Ravindra Kelekar", "Kartoos – Habib Tanvir"]}, {"name": "Sanchayan Bhag 2 (Supplementary)", "chapters": ["Harihar Kaka – Midhilesh Kumar Rai", "Sapno Ke Se Din – Gurdial Singh", "Topi Shukla – Rahi Masoom Raza"]}]}], "sync": {"db_url": "https://study-tracker-96b2a-default-rtdb.firebaseio.com/"}};
+const SYLLABUS = {"student": "Kashika", "grade": "CBSE Class 10", "practice_areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet"], "common_areas": ["Revision Assignments", "Weekly Test Papers / Model Test Paper"], "subjects": [{"name": "Social Science (SST)", "groups": [{"name": "History – India and the Contemporary World-II", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Book Marked Questions", "Assignment (MCQ & A-R)", "Worksheet", "Sagar's MCQ & Assertion-Reason", "Map Work"], "chapters": ["The Rise of Nationalism in Europe", "Nationalism in India", "The Making of a Global World", "The Age of Industrialisation", "Print Culture and the Modern World"]}, {"name": "Geography – Contemporary India-II", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet", "Sagar's MCQ & Assertion-Reason", "Map Work"], "chapters": ["Resources and Development", "Forest and Wildlife Resources", "Water Resources", "Agriculture", "Minerals and Energy Resources", "Manufacturing Industries", "Lifelines of National Economy"]}, {"name": "Political Science – Democratic Politics-II", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Book Marked Questions", "Assignment (MCQ & A-R)", "Worksheet", "Sagar's MCQ & Assertion-Reason"], "chapters": ["Power Sharing", "Federalism", "Gender, Religion and Caste", "Political Parties", "Outcomes of Democracy"]}, {"name": "Economics – Understanding Economic Development", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet", "Sagar's MCQ & Assertion-Reason"], "chapters": ["Development", "Sectors of the Indian Economy", "Money and Credit", "Globalisation and the Indian Economy", "Consumer Rights"]}]}, {"name": "Science", "groups": [{"name": "Chemistry", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Practical"], "chapters": ["Chemical Reactions and Equations", "Acids, Bases and Salts", "Metals and Non-metals", "Carbon and its Compounds"]}, {"name": "Biology", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Diagrams"], "chapters": ["Life Processes", "How do Organisms Reproduce?", "Heredity", "Our Environment"]}, {"name": "Physics", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Numericals"], "chapters": ["Light – Reflection and Refraction", "The Human Eye and the Colourful World", "Electricity", "Magnetic Effects of Electric Current"]}]}, {"name": "Mathematics", "areas": ["NCERT Examples", "NCERT Exercises", "RD Examples", "RD Exercises", "Worksheets"], "groups": [{"name": "", "chapters": ["Real Numbers", "Polynomials", "Pair of Linear Equations in Two Variables", "Quadratic Equations", "Arithmetic Progressions", "Triangles", "Coordinate Geometry", "Introduction to Trigonometry", "Some Applications of Trigonometry", "Circles", "Areas Related to Circles", "Surface Areas and Volumes", "Statistics", "Probability"]}]}, {"name": "English", "extra_areas": ["BBC Compacta"], "groups": [{"name": "First Flight – Prose", "chapters": ["A Letter to God", "Nelson Mandela: Long Walk to Freedom", "Two Stories about Flying", "From the Diary of Anne Frank", "Glimpses of India", "Mijbil the Otter", "Madam Rides the Bus", "The Sermon at Benares", "The Proposal"]}, {"name": "First Flight – Poetry", "chapters": ["Dust of Snow / Fire and Ice", "A Tiger in the Zoo", "How to Tell Wild Animals", "The Ball Poem", "Amanda!", "The Trees", "Fog", "The Tale of Custard the Dragon", "For Anne Gregory"]}, {"name": "Footprints Without Feet", "chapters": ["A Triumph of Surgery", "The Thief's Story", "The Midnight Visitor", "A Question of Trust", "Footprints without Feet", "The Making of a Scientist", "The Necklace", "Bholi", "The Book That Saved the Earth"]}]}, {"name": "Hindi (Course B)", "extra_areas": ["All In One"], "groups": [{"name": "Sparsh Bhag 2 – Kavya (Poetry)", "chapters": ["Saakhi – Kabir", "Pad – Meera", "Manushyata – Maithilisharan Gupt", "Parvat Pradesh Mein Paavas – Sumitranandan Pant", "Top – Veeren Dangwal", "Kar Chale Hum Fida – Kaifi Azmi", "Aatmtraan – Rabindranath Tagore"]}, {"name": "Sparsh Bhag 2 – Gadya (Prose)", "chapters": ["Bade Bhai Sahab – Premchand", "Diary Ka Ek Panna – Sitaram Seksaria", "Tataanra-Vaameero Katha – Leeladhar Mandloi", "Teesri Kasam Ke Shilpkaar Shailendra – Prahlad Agarwal", "Ab Kahan Doosron Ke Dukh Mein Shaamil Hone Wale – Nida Fazli", "Patjhar Mein Tooti Pattiyaan – Ravindra Kelekar", "Kartoos – Habib Tanvir"]}, {"name": "Sanchayan Bhag 2 (Supplementary)", "chapters": ["Harihar Kaka – Midhilesh Kumar Rai", "Sapno Ke Se Din – Gurdial Singh", "Topi Shukla – Rahi Masoom Raza"]}]}], "sync": {"db_url": "https://study-tracker-96b2a-default-rtdb.firebaseio.com/"}};
 const BASE_AREAS = SYLLABUS.practice_areas || [];
 function areasFor(sub, grp){
   // A group or subject can fully replace the base columns with its own `areas`
@@ -258,13 +257,6 @@ function renderTabs(){
 }
 function renderSubject(){
   const si=activeSubject, sub=SYLLABUS.subjects[si];
-  const st=subjectStats(si);
-  document.getElementById('subjbar').innerHTML =
-    `<div class="barrow"><strong style="min-width:120px">${escapeHtml(sub.name)}</strong>`+
-    `<div class="bar ${st.pct===100?'full':''}"><span style="width:${st.pct}%"></span></div>`+
-    `<div class="pct">${st.pct}%</div></div>`+
-    `<div class="sub" style="margin-top:6px">${st.done} of ${st.total} items complete</div>`;
-
   const panel=document.getElementById('panel'); panel.innerHTML='';
   sub.groups.forEach((grp,gi)=>{
     if(grp.name){ const gt=document.createElement('div'); gt.className='group-title'; gt.textContent=grp.name; panel.appendChild(gt); }
