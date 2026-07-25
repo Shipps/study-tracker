@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Tracker</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1f2430; --muted:#6b7280;
+    --line:#e6e8ef; --accent:#4f46e5; --accent-soft:#eef0ff;
+    --done:#16a34a; --track:#eceef4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45}
+  .wrap{max-width:1040px;margin:0 auto;padding:18px 16px 60px}
+  header{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;justify-content:space-between}
+  h1{font-size:22px;margin:0}
+  .sub{color:var(--muted);font-size:13px}
+  .homelink{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;
+    color:var(--muted);text-decoration:none;margin-bottom:8px}
+  .homelink:hover{color:var(--accent)}
+  .icons{display:flex;gap:8px;align-items:center;position:relative}
+  .iconbtn{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);background:var(--card);border-radius:10px;cursor:pointer;color:var(--ink)}
+  .iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+  .iconbtn svg{width:19px;height:19px}
+
+  /* dropdown menus */
+  .menu{position:absolute;top:44px;right:0;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;box-shadow:0 10px 30px rgba(20,20,40,.12);padding:6px;min-width:230px;z-index:40;display:none}
+  .menu.open{display:block}
+  .menu button{display:flex;width:100%;align-items:center;gap:8px;text-align:left;border:0;background:none;
+    padding:9px 10px;border-radius:8px;font:inherit;color:var(--ink);cursor:pointer}
+  .menu button:hover{background:var(--accent-soft)}
+  .menu .sep{height:1px;background:var(--line);margin:5px 2px}
+  .menu .danger{color:#b42318}
+  .menu .head{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:6px 10px 2px}
+
+  /* tabs (folder-style, attached to the content card below) */
+  .tabs{display:flex;gap:4px;overflow-x:auto;margin:20px 0 0;padding:0 2px;border-bottom:1px solid var(--line)}
+  .tab{white-space:nowrap;border:1px solid transparent;border-bottom:none;background:transparent;
+    border-radius:10px 10px 0 0;padding:11px 16px;cursor:pointer;font:inherit;color:var(--muted);font-weight:500;
+    display:flex;gap:9px;align-items:center;position:relative;top:1px;transition:background .15s,color .15s}
+  .tab:hover{color:var(--accent);background:var(--accent-soft)}
+  .tab .mini{font-variant-numeric:tabular-nums;font-size:11.5px;font-weight:600;color:var(--muted);
+    background:rgba(31,36,48,.07);padding:2px 8px;border-radius:99px}
+  .tab.active{background:var(--card);color:var(--accent);font-weight:700;
+    border-color:var(--line);border-bottom-color:var(--card);
+    box-shadow:inset 0 3px 0 var(--accent), 0 -3px 8px rgba(31,36,48,.05)}
+  .tab.active .mini{color:#fff;background:var(--accent)}
+
+  /* content card that the active tab connects into */
+  #panel{border:1px solid var(--line);border-top:none;background:var(--card);
+    border-radius:0 0 14px 14px;padding:6px 18px 20px;min-height:120px}
+
+  .group-title{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;
+    letter-spacing:.04em;padding:16px 2px 8px}
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-bottom:6px}
+  table{width:100%;border-collapse:collapse;min-width:520px}
+  th,td{text-align:left;padding:9px 11px;border-top:1px solid var(--line);font-size:13px}
+  thead th{border-top:0}
+  th{color:var(--muted);font-weight:600;background:#f7f8fc;font-size:12px}
+  tbody tr:hover{background:#fbfbfe}
+  td.ch{min-width:190px}
+  .cell{text-align:center}
+  .chk{width:19px;height:19px;cursor:pointer;accent-color:var(--accent)}
+  tr.done td.ch{color:var(--done);font-weight:600}
+  .chprog{font-size:11px;color:var(--muted);white-space:nowrap}
+
+  .note{background:#fff8e6;border:1px solid #f2e2b3;color:#7a5b00;font-size:12px;padding:8px 12px;border-radius:8px;margin:12px 0}
+  .foot{color:var(--muted);font-size:12px;margin-top:22px;text-align:center}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(18,18,35,.42);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+  .overlay.open{display:flex}
+  .modal{background:var(--card);border-radius:16px;max-width:640px;width:100%;max-height:88vh;overflow:auto;padding:20px}
+  .modal h2{margin:0 0 4px;font-size:18px}
+  .modal .close{float:right;border:0;background:none;font-size:20px;cursor:pointer;color:var(--muted)}
+  .modal input[type=text]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;margin-top:8px}
+  .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .btn{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.danger{background:#b42318;color:#fff;border-color:#b42318}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* analytics doughnuts */
+  .donutgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:14px;margin-top:14px}
+  .donut{text-align:center}
+  .donut svg{width:96px;height:96px}
+  .donut .lbl{font-size:12px;margin-top:4px;color:var(--ink)}
+  .overallwrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .overallwrap svg{width:120px;height:120px}
+
+  /* print report */
+  #printReport{display:none}
+  @media print{
+    body{background:#fff}
+    .app{display:none !important}
+    #printReport{display:block !important}
+    #printReport table{min-width:0}
+    #printReport .tablewrap{overflow:visible}
+  }
+  #printReport h1{font-size:20px;margin:0 0 2px}
+  #printReport .meta{color:#555;font-size:12px;margin-bottom:14px}
+  #printReport h2{font-size:15px;margin:16px 0 6px;border-bottom:1px solid #ccc;padding-bottom:3px}
+  #printReport h3{font-size:13px;margin:10px 0 4px;color:#333}
+  #printReport table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}
+  #printReport th,#printReport td{border:1px solid #ccc;padding:3px 5px;text-align:left}
+</style>
+</head>
+<body>
+<div class="app wrap">
+  <header>
+    <div>
+      <a id="homelink" class="homelink" href="#" style="display:none">&larr; Dashboard</a>
+      <h1 id="title">Study Tracker</h1>
+      <div class="sub" id="subtitle"></div>
+      <div class="sub" id="syncstatus" style="display:none;margin-top:3px"></div>
+    </div>
+    <div class="icons">
+      <button class="iconbtn" title="Analytics" onclick="openAnalytics()" aria-label="Analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9v9z"/><path d="M12 3a9 9 0 0 1 9 9h-9z"/></svg>
+      </button>
+      <button class="iconbtn" title="Download report (PDF)" onclick="toggleMenu('dlmenu')" aria-label="Download report">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      </button>
+      <button class="iconbtn" title="Settings" onclick="toggleMenu('setmenu')" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.62.78 1.05 1.42 1.05H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+
+      <div class="menu" id="dlmenu"><div class="head">Download progress report (PDF)</div><div id="dlitems"></div></div>
+      <div class="menu" id="setmenu">
+        <div class="head">Settings</div>
+        <button class="danger" onclick="openReset()">Reset progress…</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="note" id="seednote"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="panel"></div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<!-- Analytics modal -->
+<div class="overlay" id="analyticsOverlay">
+  <div class="modal">
+    <button class="close" onclick="closeOverlay('analyticsOverlay')">&times;</button>
+    <h2>Progress overview</h2>
+    <div class="sub">Visual progress across all subjects</div>
+    <div class="overallwrap" id="overallDonut" style="margin-top:14px"></div>
+    <div class="donutgrid" id="subjectDonuts"></div>
+  </div>
+</div>
+
+<!-- Reset modal -->
+<div class="overlay" id="resetOverlay">
+  <div class="modal" style="max-width:440px">
+    <button class="close" onclick="closeOverlay('resetOverlay')">&times;</button>
+    <h2>Reset all progress?</h2>
+    <div class="sub">This clears every ticked item for this tracker and cannot be undone. Type <strong>RESET</strong> to confirm.</div>
+    <input type="text" id="resetInput" placeholder="Type RESET" autocomplete="off" oninput="checkReset()">
+    <div class="actions">
+      <button class="btn" onclick="closeOverlay('resetOverlay')">Cancel</button>
+      <button class="btn danger" id="resetConfirm" disabled onclick="doReset()">Reset progress</button>
+    </div>
+  </div>
+</div>
+
+<div id="printReport"></div>
+
+<script>
+const SYLLABUS = {"student": "Kashika", "grade": "CBSE Class 10", "title": "Weekly Test 2 — Hindi", "subtitle": "Test date: 10 Aug 2026", "tracker_id": "weekly-cycle2-hindi", "practice_areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet"], "common_areas": ["Revision Assignments", "Weekly Test Papers / Model Test Paper"], "subjects": [{"name": "Hindi (Course B)", "extra_areas": ["All In One"], "groups": [{"name": "Sparsh Bhag 2 (पाठ)", "chapters": ["मीरा के पद (Pad – Meera)", "तताँरा-वामीरो कथा (Tataanra-Vaameero Katha)"]}, {"name": "व्याकरण / लेखन (Grammar & Writing)", "chapters": ["अनुच्छेद लेखन", "अपठित गद्यांश", "पदबंध", "सूचना लेखन"]}]}], "sync": {"db_url": "https://study-tracker-96b2a-default-rtdb.firebaseio.com/"}, "home": "../index.html"};
+const BASE_AREAS = SYLLABUS.practice_areas || [];
+function areasFor(sub, grp){
+  // A group or subject can fully replace the base columns with its own `areas`
+  // (Maths uses NCERT/RD examples+exercises instead of the shared set). Otherwise
+  // columns are the base plus whatever the subject and group add via extra_areas.
+  // common_areas are appended to every subject's columns (rightmost).
+  let a;
+  if(grp && grp.areas) a = grp.areas.slice();
+  else if(sub.areas) a = sub.areas.slice();
+  else a = BASE_AREAS.concat(sub.extra_areas || [], (grp && grp.extra_areas) || []);
+  return a.concat(SYLLABUS.common_areas || []);
+}
+
+const STORE_KEY = "study-tracker::" + (SYLLABUS.tracker_id || ((SYLLABUS.student||"student") + "::" + (SYLLABUS.grade||"")));
+let state = {};
+try { const raw = localStorage.getItem(STORE_KEY); if(raw) state = JSON.parse(raw); } catch(e){}
+let activeSubject = 0;
+
+// --- Optional cross-device sync via Firebase Realtime Database ---
+const SYNC = SYLLABUS.sync || null;
+function remoteUrl(){
+  if(!SYNC || !SYNC.db_url) return null;
+  const id = SYLLABUS.tracker_id || ((SYLLABUS.student||"student")+"-"+(SYLLABUS.grade||"")).replace(/\s+/g,'-');
+  return SYNC.db_url.replace(/\/+$/,'') + "/trackers/" + encodeURIComponent(id) + ".json";
+}
+function setSync(msg){ const el=document.getElementById('syncstatus'); if(el){ el.style.display=SYNC?'block':'none'; el.textContent=msg; } }
+let pushTimer=null;
+function scheduleRemotePush(){
+  const url=remoteUrl(); if(!url) return;
+  setSync('Saving…'); clearTimeout(pushTimer);
+  pushTimer=setTimeout(()=>{
+    fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)})
+      .then(r=>{ if(!r.ok) throw 0; setSync('✓ Synced across devices'); })
+      .catch(()=>setSync('Offline – saved on this device'));
+  },600);
+}
+async function loadRemote(){
+  const url=remoteUrl(); if(!url) return;
+  setSync('Syncing…');
+  try{
+    const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw 0;
+    const data=await r.json();
+    if(data && typeof data==='object'){ state=data; try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){} renderAll(); }
+    setSync('✓ Synced across devices');
+  }catch(e){ setSync('Offline – saved on this device'); }
+}
+
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} scheduleRemotePush(); }
+function key(s,g,c,a){ return s+"|"+g+"|"+c+"|"+a; }
+
+function groupStats(si,gi){
+  const sub=SYLLABUS.subjects[si], grp=sub.groups[gi], areas=areasFor(sub,grp);
+  let total=0,done=0;
+  grp.chapters.forEach((ch,ci)=>areas.forEach((_,ai)=>{ total++; if(state[key(si,gi,ci,ai)]) done++; }));
+  return {total,done};
+}
+function subjectStats(si){
+  let total=0,done=0;
+  SYLLABUS.subjects[si].groups.forEach((grp,gi)=>{ const s=groupStats(si,gi); total+=s.total; done+=s.done; });
+  return {total,done,pct: total?Math.round(done/total*100):0};
+}
+function overallStats(){
+  let total=0,done=0;
+  SYLLABUS.subjects.forEach((sub,si)=>{ const s=subjectStats(si); total+=s.total; done+=s.done; });
+  return {total,done,pct: total?Math.round(done/total*100):0};
+}
+
+/* ---------- rendering ---------- */
+function renderAll(){
+  const hl=document.getElementById('homelink');
+  if(SYLLABUS.home){ hl.href=SYLLABUS.home; hl.style.display='inline-flex'; } else { hl.style.display='none'; }
+  document.getElementById('title').textContent = SYLLABUS.title || ((SYLLABUS.student? SYLLABUS.student+"'s " : "") + "Study Tracker");
+  document.getElementById('subtitle').textContent = SYLLABUS.subtitle || SYLLABUS.grade || "";
+  const nEl=document.getElementById('seednote');
+  nEl.textContent = SYLLABUS.note || ""; nEl.style.display = SYLLABUS.note ? 'block':'none';
+  renderTabs(); renderSubject(); renderFoot();
+}
+function renderTabs(){
+  const tabs=document.getElementById('tabs'); tabs.innerHTML='';
+  SYLLABUS.subjects.forEach((sub,si)=>{
+    const st=subjectStats(si);
+    const b=document.createElement('button');
+    b.className='tab'+(si===activeSubject?' active':'');
+    b.innerHTML=`<span>${escapeHtml(sub.name)}</span><span class="mini">${st.pct}%</span>`;
+    b.onclick=()=>{ activeSubject=si; renderTabs(); renderSubject(); };
+    tabs.appendChild(b);
+  });
+}
+function renderSubject(){
+  const si=activeSubject, sub=SYLLABUS.subjects[si];
+  const panel=document.getElementById('panel'); panel.innerHTML='';
+  sub.groups.forEach((grp,gi)=>{
+    if(grp.name){ const gt=document.createElement('div'); gt.className='group-title'; gt.textContent=grp.name; panel.appendChild(gt); }
+    const areas=areasFor(sub,grp);
+    const wrap=document.createElement('div'); wrap.className='tablewrap';
+    const tbl=document.createElement('table');
+    let head='<thead><tr><th class="ch">Chapter</th>';
+    areas.forEach(a=> head+=`<th class="cell">${escapeHtml(a)}</th>`);
+    head+='<th class="cell">Done</th></tr></thead>';
+    let body='<tbody>';
+    grp.chapters.forEach((ch,ci)=>{
+      let doneCount=0; areas.forEach((_,ai)=>{ if(state[key(si,gi,ci,ai)]) doneCount++; });
+      const full=doneCount===areas.length;
+      body+=`<tr class="${full?'done':''}"><td class="ch">${escapeHtml(ch)}</td>`;
+      areas.forEach((_,ai)=>{
+        const on=!!state[key(si,gi,ci,ai)];
+        body+=`<td class="cell"><input type="checkbox" class="chk" ${on?'checked':''} onchange="toggle(${si},${gi},${ci},${ai},this.checked)"></td>`;
+      });
+      body+=`<td class="cell chprog">${doneCount}/${areas.length}</td></tr>`;
+    });
+    body+='</tbody>';
+    tbl.innerHTML=head+body; wrap.appendChild(tbl); panel.appendChild(wrap);
+  });
+}
+function renderFoot(){
+  const o=overallStats();
+  document.getElementById('foot').textContent =
+    `Overall ${o.pct}% · ${o.done} of ${o.total} items · progress saves automatically` +
+    (SYNC ? ' and syncs across your devices' : ' on this device');
+}
+
+function toggle(si,gi,ci,ai,on){ const k=key(si,gi,ci,ai); if(on)state[k]=true; else delete state[k]; save();
+  renderTabs(); renderSubject(); renderFoot(); }
+
+/* ---------- menus ---------- */
+function toggleMenu(id){
+  const m=document.getElementById(id); const wasOpen=m.classList.contains('open');
+  closeMenus(); if(!wasOpen){ if(id==='dlmenu') buildDownloadMenu(); m.classList.add('open'); }
+}
+function closeMenus(){ document.querySelectorAll('.menu').forEach(m=>m.classList.remove('open')); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.icons')) closeMenus(); });
+
+/* ---------- analytics ---------- */
+function donutSVG(pct,size,color){
+  color=color||'var(--accent)';
+  return `<svg viewBox="0 0 36 36">
+    <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--track)" stroke-width="3.4"/>
+    <circle cx="18" cy="18" r="15.915" fill="none" stroke="${pct===100?'var(--done)':color}" stroke-width="3.4"
+      stroke-dasharray="${pct}, 100" stroke-linecap="round" transform="rotate(-90 18 18)"/>
+    <text x="18" y="19.5" text-anchor="middle" font-size="8.5" fill="var(--ink)" font-weight="700">${pct}%</text>
+  </svg>`;
+}
+function openAnalytics(){
+  closeMenus();
+  const o=overallStats();
+  document.getElementById('overallDonut').innerHTML =
+    donutSVG(o.pct,120)+`<div><div style="font-size:15px;font-weight:700">Overall progress</div>`+
+    `<div class="sub">${o.done} of ${o.total} items complete</div></div>`;
+  const grid=document.getElementById('subjectDonuts'); grid.innerHTML='';
+  SYLLABUS.subjects.forEach((sub,si)=>{
+    const st=subjectStats(si);
+    const d=document.createElement('div'); d.className='donut';
+    d.innerHTML=donutSVG(st.pct,96)+`<div class="lbl">${escapeHtml(sub.name)}</div>`;
+    grid.appendChild(d);
+  });
+  openOverlay('analyticsOverlay');
+}
+
+/* ---------- reset ---------- */
+function openReset(){ closeMenus(); document.getElementById('resetInput').value=''; checkReset(); openOverlay('resetOverlay'); }
+function checkReset(){ document.getElementById('resetConfirm').disabled = document.getElementById('resetInput').value.trim()!=='RESET'; }
+function doReset(){ state={}; save(); closeOverlay('resetOverlay'); renderAll(); }
+
+/* ---------- overlays ---------- */
+function openOverlay(id){ document.getElementById(id).classList.add('open'); }
+function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+
+/* ---------- download / PDF report ---------- */
+function buildDownloadMenu(){
+  const box=document.getElementById('dlitems'); box.innerHTML='';
+  const all=document.createElement('button'); all.textContent='Full report (all subjects)';
+  all.onclick=()=>{ closeMenus(); printReport(null); }; box.appendChild(all);
+  const sep=document.createElement('div'); sep.className='sep'; box.appendChild(sep);
+  const head=document.createElement('div'); head.className='head'; head.textContent='Single subject'; box.appendChild(head);
+  SYLLABUS.subjects.forEach((sub,si)=>{
+    const b=document.createElement('button'); b.textContent=sub.name;
+    b.onclick=()=>{ closeMenus(); printReport(si); }; box.appendChild(b);
+  });
+}
+function printReport(onlySi){
+  const rep=document.getElementById('printReport');
+  const when=new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+  const title=(SYLLABUS.student?SYLLABUS.student+"'s ":'')+'Study Tracker';
+  let html=`<h1>${escapeHtml(title)} — Progress Report</h1>`+
+           `<div class="meta">${escapeHtml(SYLLABUS.grade||'')} · Generated ${when}</div>`;
+  const list = onlySi==null ? SYLLABUS.subjects.map((s,i)=>i) : [onlySi];
+  if(onlySi==null){ const o=overallStats(); html+=`<div class="meta"><strong>Overall: ${o.pct}%</strong> (${o.done}/${o.total} items)</div>`; }
+  list.forEach(si=>{
+    const sub=SYLLABUS.subjects[si], st=subjectStats(si);
+    html+=`<h2>${escapeHtml(sub.name)} — ${st.pct}% (${st.done}/${st.total})</h2>`;
+    sub.groups.forEach((grp,gi)=>{
+      const areas=areasFor(sub,grp);
+      if(grp.name) html+=`<h3>${escapeHtml(grp.name)}</h3>`;
+      html+='<table><tr><th>Chapter</th>'+areas.map(a=>`<th>${escapeHtml(a)}</th>`).join('')+'<th>Done</th></tr>';
+      grp.chapters.forEach((ch,ci)=>{
+        let dc=0; const cells=areas.map((_,ai)=>{ const on=!!state[key(si,gi,ci,ai)]; if(on)dc++; return `<td style="text-align:center">${on?'✓':'–'}</td>`; }).join('');
+        html+=`<tr><td>${escapeHtml(ch)}</td>${cells}<td style="text-align:center">${dc}/${areas.length}</td></tr>`;
+      });
+      html+='</table>';
+    });
+  });
+  rep.innerHTML=html;
+  window.print();
+}
+
+/* ---------- export / import ---------- */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify({student:SYLLABUS.student,grade:SYLLABUS.grade,tracker_id:SYLLABUS.tracker_id,state},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=(SYLLABUS.student||'study')+'-progress.json'; a.click();
+}
+function importJSON(e){
+  const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); state=d.state||d; save(); closeMenus(); renderAll(); }catch(err){ alert('Could not read that file.'); } };
+  r.readAsText(f);
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+renderAll();
+loadRemote();
+</script>
+</body>
+</html>
