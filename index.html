@@ -59,6 +59,31 @@
   .card.done .datebox{background:#eef0f5;color:var(--muted)}
 
   .foot{color:var(--muted);font-size:12px;margin-top:26px;text-align:center}
+
+  /* to-do */
+  .todo{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 26px}
+  .todo h3{margin:0 0 12px;font-size:15px;font-weight:700}
+  .td-add{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .td-add input[type=text]{flex:1;min-width:160px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit}
+  .td-add input[type=date]{padding:9px;border:1px solid var(--line);border-radius:8px;font:inherit;color:var(--muted)}
+  .td-add select{padding:9px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--card)}
+  .td-add button{padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
+  .td-item{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px solid var(--line)}
+  .td-item:first-child{border-top:none}
+  .td-item.done{opacity:.5}
+  .td-item.done .td-text{text-decoration:line-through}
+  .td-cb{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex:none}
+  .td-text{flex:1;font-size:14px;word-break:break-word}
+  .td-chip{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+  .td-chip.homework{background:#e0edff;color:#1d4ed8}
+  .td-chip.tuition{background:#efe4ff;color:#7c3aed}
+  .td-chip.selfgoal{background:#e7f6ec;color:#16a34a}
+  .td-chip.target{background:#fef3e2;color:#b45309}
+  .td-due{font-size:11px;color:var(--muted);white-space:nowrap}
+  .td-due.today{color:var(--accent);font-weight:700}
+  .td-due.over{color:#b42318;font-weight:700}
+  .td-del{border:none;background:none;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;flex:none}
+  .td-empty{color:var(--muted);font-size:13px;padding:6px 2px}
 </style>
 </head>
 <body>
@@ -78,6 +103,8 @@
     </div>
     <span class="go">&rarr;</span>
   </a>
+
+  <div class="todo" id="todoGeneral"></div>
 
   <div id="upcoming"></div>
 
@@ -161,6 +188,54 @@ function render(){
   document.getElementById('foot').textContent = upcoming.length+" upcoming · "+past.length+" completed · tap an exam to open its tracker";
 }
 render();
+
+// --- Daily to-do (own Firebase node, independent of the trackers) ---
+const TODO_DB = "https://study-tracker-96b2a-default-rtdb.firebaseio.com/";
+function initTodo(opts){
+  const dbUrl=opts.dbUrl||null, listId=opts.listId, mount=document.getElementById(opts.mountId);
+  if(!mount) return;
+  const title=opts.title||"To-Do", CATS=opts.cats||["Self-goal","Homework","Tuition","Target"];
+  const KEY="todo::"+listId, url=dbUrl? dbUrl.replace(/\/+$/,'')+"/todos/"+encodeURIComponent(listId)+".json":null;
+  const chipClass={"Homework":"homework","Tuition":"tuition","Self-goal":"selfgoal","Target":"target"};
+  let items=[]; try{const r=localStorage.getItem(KEY); if(r)items=JSON.parse(r);}catch(e){}
+  let pushT=null;
+  function persist(){ try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}
+    if(url){clearTimeout(pushT);pushT=setTimeout(()=>{fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(items)}).catch(()=>{});},500);} }
+  async function load(){ if(url){try{const r=await fetch(url,{cache:'no-store'}); if(r.ok){const dd=await r.json(); if(Array.isArray(dd)){items=dd; try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}}}}catch(e){}} render2(); }
+  function today(){const t=new Date();t.setHours(0,0,0,0);return t;}
+  function fmtDue(dstr){ if(!dstr)return null; const dt=new Date(dstr+"T00:00:00"); const diff=Math.round((dt-today())/86400000);
+    let cls="",lbl=dt.toLocaleDateString(undefined,{day:'numeric',month:'short'}); if(diff<0)cls="over"; else if(diff===0){cls="today";lbl="Today";} else if(diff===1)lbl="Tomorrow"; return {cls,lbl}; }
+  function sorted(){ return items.slice().sort((a,b)=>{ if(a.done!==b.done)return a.done?1:-1; const ad=a.d||"9999-99",bd=b.d||"9999-99"; return ad<bd?-1:ad>bd?1:0; }); }
+  function render2(){
+    mount.innerHTML="";
+    const h=document.createElement("h3"); h.textContent=title; mount.appendChild(h);
+    const row=document.createElement("div"); row.className="td-add";
+    const inp=document.createElement("input"); inp.type="text"; inp.placeholder="Add a task…";
+    const sel=document.createElement("select"); CATS.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;sel.appendChild(o);});
+    const due=document.createElement("input"); due.type="date";
+    const btn=document.createElement("button"); btn.textContent="Add";
+    function addNow(){ if(!inp.value.trim())return; items.push({id:Date.now()+""+Math.random().toString(36).slice(2,6),t:inp.value.trim(),c:sel.value,d:due.value,done:false}); inp.value="";due.value=""; persist(); render2(); }
+    btn.addEventListener("click",addNow); inp.addEventListener("keydown",e=>{if(e.key==="Enter")addNow();});
+    row.append(inp,sel,due,btn); mount.appendChild(row);
+    const list=document.createElement("div"); const arr=sorted();
+    if(!arr.length){const e=document.createElement("div");e.className="td-empty";e.textContent="No tasks yet — add homework, tuition work, or a prep goal above.";list.appendChild(e);}
+    arr.forEach(it=>{
+      const el=document.createElement("div"); el.className="td-item"+(it.done?" done":"");
+      const cb=document.createElement("input");cb.type="checkbox";cb.className="td-cb";cb.checked=it.done;
+      cb.addEventListener("change",()=>{it.done=cb.checked;persist();render2();});
+      const tx=document.createElement("span");tx.className="td-text";tx.textContent=it.t;
+      el.append(cb,tx);
+      if(it.c){const ch=document.createElement("span");ch.className="td-chip "+(chipClass[it.c]||"");ch.textContent=it.c;el.appendChild(ch);}
+      const fd=fmtDue(it.d); if(fd){const dv=document.createElement("span");dv.className="td-due "+fd.cls;dv.textContent=fd.lbl;el.appendChild(dv);}
+      const del=document.createElement("button");del.className="td-del";del.innerHTML="&times;";del.title="Delete";
+      del.addEventListener("click",()=>{items=items.filter(x=>x.id!==it.id);persist();render2();});
+      el.appendChild(del); list.appendChild(el);
+    });
+    mount.appendChild(list);
+  }
+  render2(); load();
+}
+initTodo({ dbUrl: TODO_DB, listId:"general", mountId:"todoGeneral", title:"To-Do" });
 </script>
 </body>
 </html>
