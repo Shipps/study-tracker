@@ -221,12 +221,27 @@ async function loadRemote(){
 }
 
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} scheduleRemotePush(); }
-function key(s,g,c,a){ return s+"|"+g+"|"+c+"|"+a; }
+
+// Semantic key: "subject :: chapter :: area", with any trailing "(...)" annotation
+// stripped from the chapter. The same logical item therefore produces the SAME key
+// in every tracker, so a chapter+activity ticked in a test tracker lines up with the
+// same cell in the Full Syllabus tracker regardless of index order or "(partly)"-style
+// suffixes. This is what makes the one-way roll-up below possible.
+function baseName(s){ return String(s).replace(/\s*\([^)]*\)\s*$/,'').trim(); }
+function key(si,gi,ci,ai){
+  const sub=SYLLABUS.subjects[si], grp=sub.groups[gi], areas=areasFor(sub,grp);
+  return sub.name + " :: " + baseName(grp.chapters[ci]) + " :: " + areas[ai];
+}
+
+// overlay = items rolled up (read-only) from OTHER trackers. Recomputed on load and
+// never written back, so the flow is strictly tests -> Full Syllabus, never reverse.
+let overlay = {};
+function isChecked(k){ return !!(state[k] || overlay[k]); }
 
 function groupStats(si,gi){
   const sub=SYLLABUS.subjects[si], grp=sub.groups[gi], areas=areasFor(sub,grp);
   let total=0,done=0;
-  grp.chapters.forEach((ch,ci)=>areas.forEach((_,ai)=>{ total++; if(state[key(si,gi,ci,ai)]) done++; }));
+  grp.chapters.forEach((ch,ci)=>areas.forEach((_,ai)=>{ total++; if(isChecked(key(si,gi,ci,ai))) done++; }));
   return {total,done};
 }
 function subjectStats(si){
@@ -274,11 +289,11 @@ function renderSubject(){
     head+='<th class="cell">Done</th></tr></thead>';
     let body='<tbody>';
     grp.chapters.forEach((ch,ci)=>{
-      let doneCount=0; areas.forEach((_,ai)=>{ if(state[key(si,gi,ci,ai)]) doneCount++; });
+      let doneCount=0; areas.forEach((_,ai)=>{ if(isChecked(key(si,gi,ci,ai))) doneCount++; });
       const full=doneCount===areas.length;
       body+=`<tr class="${full?'done':''}"><td class="ch">${escapeHtml(ch)}</td>`;
       areas.forEach((_,ai)=>{
-        const on=!!state[key(si,gi,ci,ai)];
+        const on=isChecked(key(si,gi,ci,ai));
         body+=`<td class="cell"><input type="checkbox" class="chk" ${on?'checked':''} onchange="toggle(${si},${gi},${ci},${ai},this.checked)"></td>`;
       });
       body+=`<td class="cell chprog">${doneCount}/${areas.length}</td></tr>`;
@@ -294,8 +309,9 @@ function renderFoot(){
     (SYNC ? ' and syncs across your devices' : ' on this device');
 }
 
-function toggle(si,gi,ci,ai,on){ const k=key(si,gi,ci,ai); if(on)state[k]=true; else delete state[k]; save();
-  renderTabs(); renderSubject(); renderFoot(); }
+function toggle(si,gi,ci,ai,on){ const k=key(si,gi,ci,ai);
+  if(on) state[k]=true; else { delete state[k]; delete overlay[k]; } // clearing overlay lets a rolled-up item be un-ticked (it returns on reload)
+  save(); renderTabs(); renderSubject(); renderFoot(); }
 
 /* ---------- menus ---------- */
 function toggleMenu(id){
@@ -368,7 +384,7 @@ function printReport(onlySi){
       if(grp.name) html+=`<h3>${escapeHtml(grp.name)}</h3>`;
       html+='<table><tr><th>Chapter</th>'+areas.map(a=>`<th>${escapeHtml(a)}</th>`).join('')+'<th>Done</th></tr>';
       grp.chapters.forEach((ch,ci)=>{
-        let dc=0; const cells=areas.map((_,ai)=>{ const on=!!state[key(si,gi,ci,ai)]; if(on)dc++; return `<td style="text-align:center">${on?'✓':'–'}</td>`; }).join('');
+        let dc=0; const cells=areas.map((_,ai)=>{ const on=isChecked(key(si,gi,ci,ai)); if(on)dc++; return `<td style="text-align:center">${on?'✓':'–'}</td>`; }).join('');
         html+=`<tr><td>${escapeHtml(ch)}</td>${cells}<td style="text-align:center">${dc}/${areas.length}</td></tr>`;
       });
       html+='</table>';
@@ -391,8 +407,43 @@ function importJSON(e){
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+// --- One-way roll-up (tests -> Full Syllabus) ---
+// When aggregate_tests is set, this tracker pulls every OTHER tracker's ticks in one
+// request and overlays any that match a cell it also has. Because keys are semantic,
+// "Water Resources / NCERT Read" ticked in a weekly test shows as done here too. It
+// never writes back, so the roll-up stays one-directional.
+let VALID=null;
+function validKeys(){
+  if(VALID) return VALID;
+  VALID=new Set();
+  SYLLABUS.subjects.forEach((sub,si)=>sub.groups.forEach((grp,gi)=>{
+    const areas=areasFor(sub,grp);
+    grp.chapters.forEach((ch,ci)=>areas.forEach((_,ai)=>VALID.add(key(si,gi,ci,ai))));
+  }));
+  return VALID;
+}
+async function aggregateTests(){
+  if(!SYLLABUS.aggregate_tests || !SYNC || !SYNC.db_url) return;
+  try{
+    const r=await fetch(SYNC.db_url.replace(/\/+$/,'')+"/trackers.json",{cache:'no-store'});
+    if(!r.ok) throw 0;
+    const all=await r.json(); if(!all || typeof all!=='object') return;
+    const mine=SYLLABUS.tracker_id, valid=validKeys();
+    overlay={}; let n=0, srcs=0;
+    Object.keys(all).forEach(tid=>{
+      if(tid===mine) return;
+      const st=all[tid]; if(!st || typeof st!=='object') return;
+      let used=false;
+      Object.keys(st).forEach(k=>{ if(st[k]===true && valid.has(k) && !state[k]){ overlay[k]=true; n++; used=true; } });
+      if(used) srcs++;
+    });
+    renderTabs(); renderSubject(); renderFoot();
+    if(n>0) setSync('✓ Synced · '+n+' item'+(n>1?'s':'')+' rolled up from '+srcs+' test'+(srcs>1?'s':''));
+  }catch(e){}
+}
+
 renderAll();
-loadRemote();
+(async function(){ await loadRemote(); await aggregateTests(); })();
 </script>
 </body>
 </html>
