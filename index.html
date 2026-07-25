@@ -109,17 +109,48 @@
   .aname{flex:1;font-weight:600;font-size:14px;word-break:break-word}
   .ago{color:var(--muted);font-size:15px}
 
-  .backupbar{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:22px;flex-wrap:wrap}
-  .backupbar button{padding:7px 13px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;font:inherit;color:var(--ink)}
-  .backupbar button:hover{border-color:var(--accent);color:var(--accent)}
-  .backupbar .lbl{font-size:12px;color:var(--muted);width:100%;text-align:center;margin-bottom:2px}
+  /* header + settings menu + modal */
+  .hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .hicons{position:relative;flex:none}
+  .iconbtn{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--card);border-radius:10px;cursor:pointer;color:var(--ink)}
+  .iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+  .iconbtn svg{width:19px;height:19px}
+  .menu{position:absolute;top:44px;right:0;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(20,20,40,.12);padding:6px;min-width:230px;z-index:40;display:none}
+  .menu.open{display:block}
+  .menu .head{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:6px 10px 2px}
+  .menu button{display:flex;width:100%;align-items:center;gap:8px;text-align:left;border:0;background:none;padding:9px 10px;border-radius:8px;font:inherit;color:var(--ink);cursor:pointer}
+  .menu button:hover{background:var(--accent-soft)}
+  .menu .danger{color:#b42318}
+  .overlay{position:fixed;inset:0;background:rgba(18,18,35,.42);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+  .overlay.open{display:flex}
+  .modal{background:var(--card);border-radius:16px;max-width:460px;width:100%;padding:20px}
+  .modal h2{margin:0 0 4px;font-size:18px}
+  .modal .close{float:right;border:0;background:none;font-size:20px;cursor:pointer;color:var(--muted)}
+  .modal input[type=text]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;margin-top:10px}
+  .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .btn{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit}
+  .btn.danger{background:#b42318;color:#fff;border-color:#b42318}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div>
-    <h1 id="title">Kashika's Study Tracker</h1>
-    <div class="sub">CBSE Class 10 · 2026&ndash;27</div>
+  <div class="hdr">
+    <div>
+      <h1 id="title">Kashika's Study Tracker</h1>
+      <div class="sub">CBSE Class 10 · 2026&ndash;27</div>
+    </div>
+    <div class="hicons">
+      <button class="iconbtn" title="Settings" onclick="toggleSet()" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.62.78 1.05 1.42 1.05H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="menu" id="hubmenu">
+        <div class="head">Backup &amp; restore</div>
+        <button onclick="backupAll();closeSet()">&#8595; Backup all (download)</button>
+        <button class="danger" onclick="openRestore()">&#8593; Restore all&hellip;</button>
+        <input id="restoreFile" type="file" accept="application/json" style="display:none" onchange="restoreAll(event)">
+      </div>
+    </div>
   </div>
 
   <a class="hero" href="./full-syllabus.html">
@@ -162,14 +193,20 @@
     <div id="past"></div>
   </details>
 
-  <div class="backupbar">
-    <span class="lbl">Backup / restore all progress &amp; to-dos (in case the database is ever cleared)</span>
-    <button onclick="backupAll()">⬇ Backup all</button>
-    <button onclick="document.getElementById('restoreFile').click()">⬆ Restore all</button>
-    <input id="restoreFile" type="file" accept="application/json" style="display:none" onchange="restoreAll(event)">
-  </div>
-
   <div class="foot" id="foot"></div>
+</div>
+
+<div class="overlay" id="restoreOverlay">
+  <div class="modal">
+    <button class="close" onclick="closeOverlay('restoreOverlay')">&times;</button>
+    <h2>Restore all progress?</h2>
+    <div class="sub">This overwrites <strong>all</strong> current cloud progress and to-dos with the backup file you pick. Type <strong>RESTORE</strong> to confirm, then choose the file.</div>
+    <input type="text" id="restoreInput" placeholder="Type RESTORE" autocomplete="off" oninput="checkRestore()">
+    <div class="actions">
+      <button class="btn" onclick="closeOverlay('restoreOverlay')">Cancel</button>
+      <button class="btn danger" id="restoreConfirm" disabled onclick="chooseRestoreFile()">Choose backup file&hellip;</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -315,6 +352,7 @@ function ghInfo(){
   if(!repo){ const seg=location.pathname.split("/").filter(Boolean); if(seg.length) repo=seg[0]; }
   return (user && repo) ? {user,repo} : null;
 }
+function setCount(id,n){ const el=document.getElementById(id); if(el) el.textContent=n?String(n):""; }
 function fileRow(folder,name){
   const ext=(name.split('.').pop()||'FILE').toUpperCase();
   const nice=name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
@@ -322,27 +360,49 @@ function fileRow(folder,name){
   a.innerHTML='<span class="aicon">'+ext+'</span><span class="aname">'+nice+'</span><span class="ago">&#8599;</span>';
   return a;
 }
-// List a repo folder via the GitHub API; returns the file array (or null on failure)
-// and renders it into mountId. Used for both assignments/ and cycle-tests/.
-async function loadFolderInto(folder, mountId, emptyMsg){
-  const box=document.getElementById(mountId); const gh=ghInfo();
-  if(!gh){ box.innerHTML='<div class="sub">Appears once this page is opened from your GitHub Pages site.</div>'; return null; }
-  try{
-    const r=await fetch("https://api.github.com/repos/"+gh.user+"/"+gh.repo+"/contents/"+folder+"?ref="+GH_BRANCH,{cache:'no-store'});
-    if(r.status===404){ box.innerHTML='<div class="sub">No <code>'+folder+'/</code> folder yet — create it in your repo and drop files in.</div>'; return null; }
-    if(!r.ok) throw 0;
-    const files=(await r.json()).filter(f=>f.type==='file').sort((a,b)=>a.name.localeCompare(b.name));
-    if(!files.length){ box.innerHTML='<div class="sub">'+emptyMsg+'</div>'; return files; }
-    box.innerHTML=''; files.forEach(f=>box.appendChild(fileRow(folder,f.name)));
-    return files;
-  }catch(e){ box.innerHTML='<div class="sub">Couldn\'t load right now (GitHub API may be rate-limited — try again shortly).</div>'; return null; }
+function renderFolder(folder,mountId,countId,files,emptyMsg){
+  const box=document.getElementById(mountId);
+  if(!files){ return; }
+  if(!files.length){ box.innerHTML='<div class="sub">'+emptyMsg+'</div>'; setCount(countId,0); return; }
+  box.innerHTML=''; files.slice().sort((a,b)=>a.localeCompare(b)).forEach(n=>box.appendChild(fileRow(folder,n)));
+  setCount(countId,files.length);
 }
-function setCount(id,n){ const el=document.getElementById(id); if(el) el.textContent=n?String(n):""; }
-loadFolderInto('assignments','assignments','No assignments uploaded yet.').then(files=>{ if(files) setCount('count-assignments',files.length); });
-(async function(){
-  const files=await loadFolderInto('cycle-tests','cyclepapers','No cycle-test papers uploaded yet.');
-  if(files){ setCount('count-cycletests',files.length); cyclePaperSet=new Set(files.map(f=>f.name)); render(); }  // re-render so cards get their Test paper links
-})();
+function cachedList(folder){ try{ const r=localStorage.getItem("folderlist::"+folder); return r?JSON.parse(r):null; }catch(e){ return null; } }
+function cacheList(folder,files){ try{ localStorage.setItem("folderlist::"+folder, JSON.stringify(files)); }catch(e){} }
+
+// Load both folders. Strategy for resilience: (1) paint instantly from the last
+// cached listing so a rate limit or offline never blanks the boxes, then (2) refresh
+// with a SINGLE git-tree request (one API call for both folders, half the rate use).
+async function loadFolders(){
+  const A='assignments', C='cycle-tests', gh=ghInfo();
+  const ca=cachedList(A), cc=cachedList(C);
+  if(ca) renderFolder(A,'assignments','count-assignments',ca,'No assignments uploaded yet.');
+  if(cc){ renderFolder(C,'cyclepapers','count-cycletests',cc,'No cycle-test papers uploaded yet.'); cyclePaperSet=new Set(cc); render(); }
+  if(!gh){
+    if(!ca) document.getElementById('assignments').innerHTML='<div class="sub">Appears once opened from your GitHub Pages site.</div>';
+    if(!cc) document.getElementById('cyclepapers').innerHTML='<div class="sub">Appears once opened from your GitHub Pages site.</div>';
+    return;
+  }
+  try{
+    const r=await fetch("https://api.github.com/repos/"+gh.user+"/"+gh.repo+"/git/trees/"+GH_BRANCH+"?recursive=1",{cache:'no-store'});
+    if(!r.ok) throw r.status;
+    const j=await r.json();
+    const paths=(j.tree||[]).filter(t=>t.type==='blob').map(t=>t.path);
+    const inFolder=f=>paths.filter(p=>p.indexOf(f+'/')===0).map(p=>p.slice(f.length+1)).filter(n=>n && n.indexOf('/')<0);
+    const a=inFolder(A), c=inFolder(C);
+    cacheList(A,a); cacheList(C,c);
+    renderFolder(A,'assignments','count-assignments',a,'No assignments uploaded yet.');
+    renderFolder(C,'cyclepapers','count-cycletests',c,'No cycle-test papers uploaded yet.');
+    cyclePaperSet=new Set(c); render();
+  }catch(status){
+    const msg = status===403
+      ? "GitHub rate limit reached (60/hour). It resets within the hour; the list will reappear then."
+      : "Couldn't refresh the file list right now.";
+    if(!ca) document.getElementById('assignments').innerHTML='<div class="sub">'+msg+'</div>';
+    if(!cc) document.getElementById('cyclepapers').innerHTML='<div class="sub">'+msg+'</div>';
+  }
+}
+loadFolders();
 
 // --- Backup / restore the whole system (all trackers + all to-dos) ---
 async function backupAll(){
@@ -362,19 +422,28 @@ function restoreAll(e){
   const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
   rd.onload=async()=>{
     let d; try{ d=JSON.parse(rd.result); }catch(err){ alert("That file isn't valid JSON."); return; }
-    if(!confirm("Restore will overwrite ALL current cloud progress and to-dos with this backup. Continue?")) return;
     const base=TODO_DB.replace(/\/+$/,'');
     try{
       const res=await Promise.all([
         fetch(base+"/trackers.json",{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d.trackers||{})}),
         fetch(base+"/todos.json",{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d.todos||{})})
       ]);
-      if(res.every(r=>r.ok)) alert("Restored. Reload any open tracker to see the data.");
+      if(res.every(r=>r.ok)){ closeOverlay('restoreOverlay'); alert("Restored. Reload any open tracker to see the data."); }
       else throw 0;
     }catch(err){ alert("Restore failed — most likely the database write rules. Check that Firebase Rules allow writes."); }
   };
-  rd.readAsText(f);
+  rd.readAsText(f); e.target.value="";
 }
+
+// --- Settings menu + restore confirm ---
+function toggleSet(){ document.getElementById('hubmenu').classList.toggle('open'); }
+function closeSet(){ document.getElementById('hubmenu').classList.remove('open'); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.hicons')) closeSet(); });
+function openOverlay(id){ document.getElementById(id).classList.add('open'); }
+function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+function openRestore(){ closeSet(); document.getElementById('restoreInput').value=''; checkRestore(); openOverlay('restoreOverlay'); }
+function checkRestore(){ document.getElementById('restoreConfirm').disabled = document.getElementById('restoreInput').value.trim().toUpperCase()!=='RESTORE'; }
+function chooseRestoreFile(){ document.getElementById('restoreFile').click(); }
 </script>
 </body>
 </html>
