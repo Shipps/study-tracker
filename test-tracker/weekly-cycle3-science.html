@@ -108,6 +108,31 @@
   #printReport h3{font-size:13px;margin:10px 0 4px;color:#333}
   #printReport table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}
   #printReport th,#printReport td{border:1px solid #ccc;padding:3px 5px;text-align:left}
+
+  /* to-do */
+  .todo{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:18px}
+  .todo h3{margin:0 0 10px;font-size:14px;font-weight:700}
+  .td-add{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .td-add input[type=text]{flex:1;min-width:150px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
+  .td-add input[type=date]{padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit;color:var(--muted)}
+  .td-add select{padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--card)}
+  .td-add button{padding:8px 14px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;cursor:pointer;font:inherit}
+  .td-item{display:flex;align-items:center;gap:10px;padding:9px 4px;border-top:1px solid var(--line)}
+  .td-item:first-child{border-top:none}
+  .td-item.done{opacity:.5}
+  .td-item.done .td-text{text-decoration:line-through}
+  .td-cb{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex:none}
+  .td-text{flex:1;font-size:14px;word-break:break-word}
+  .td-chip{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+  .td-chip.homework{background:#e0edff;color:#1d4ed8}
+  .td-chip.tuition{background:#efe4ff;color:#7c3aed}
+  .td-chip.selfgoal{background:#e7f6ec;color:#16a34a}
+  .td-chip.target{background:#fef3e2;color:#b45309}
+  .td-due{font-size:11px;color:var(--muted);white-space:nowrap}
+  .td-due.today{color:var(--accent);font-weight:700}
+  .td-due.over{color:#b42318;font-weight:700}
+  .td-del{border:none;background:none;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;flex:none}
+  .td-empty{color:var(--muted);font-size:13px;padding:6px 2px}
 </style>
 </head>
 <body>
@@ -141,6 +166,7 @@
   <div class="note" id="seednote"></div>
   <div class="tabs" id="tabs"></div>
   <div id="panel"></div>
+  <div class="todo" id="todoPanel" style="display:none"></div>
   <div class="foot" id="foot"></div>
 </div>
 
@@ -172,7 +198,7 @@
 <div id="printReport"></div>
 
 <script>
-const SYLLABUS = {"student": "Kashika", "grade": "CBSE Class 10", "title": "Weekly Test 3 — Science", "subtitle": "Test date: 2 Nov 2026", "tracker_id": "weekly-cycle3-science", "practice_areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet"], "common_areas": ["Revision Assignments", "Weekly Test Papers / Model Test Paper"], "subjects": [{"name": "Science", "groups": [{"name": "Physics", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Numericals"], "chapters": ["Electricity (partly)", "Magnetic Effects of Electric Current (partly)"]}, {"name": "Chemistry", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Practical"], "chapters": ["Metals and Non-metals (partly)", "Carbon and its Compounds (partly)"]}, {"name": "Biology", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Diagrams"], "chapters": ["How do Organisms Reproduce? (Sexual reproduction)", "Heredity (partly)"]}]}], "sync": {"db_url": "https://study-tracker-96b2a-default-rtdb.firebaseio.com/"}, "home": "../index.html"};
+const SYLLABUS = {"student": "Kashika", "grade": "CBSE Class 10", "title": "Weekly Test 3 — Science", "subtitle": "Test date: 2 Nov 2026", "tracker_id": "weekly-cycle3-science", "practice_areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet"], "common_areas": ["Revision Assignments", "Weekly Test Papers / Model Test Paper"], "subjects": [{"name": "Science", "groups": [{"name": "Physics", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Numericals"], "chapters": ["Electricity (partly)", "Magnetic Effects of Electric Current (partly)"]}, {"name": "Chemistry", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Practical"], "chapters": ["Metals and Non-metals (partly)", "Carbon and its Compounds (partly)"]}, {"name": "Biology", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Diagrams"], "chapters": ["How do Organisms Reproduce? (Sexual reproduction)", "Heredity (partly)"]}]}], "sync": {"db_url": "https://study-tracker-96b2a-default-rtdb.firebaseio.com/"}, "home": "../index.html", "rollup_to": "full-syllabus"};
 const BASE_AREAS = SYLLABUS.practice_areas || [];
 function areasFor(sub, grp){
   // A group or subject can fully replace the base columns with its own `areas`
@@ -230,7 +256,8 @@ function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }c
 function baseName(s){ return String(s).replace(/\s*\([^)]*\)\s*$/,'').trim(); }
 function key(si,gi,ci,ai){
   const sub=SYLLABUS.subjects[si], grp=sub.groups[gi], areas=areasFor(sub,grp);
-  return sub.name + " :: " + baseName(grp.chapters[ci]) + " :: " + areas[ai];
+  const raw = sub.name + " :: " + baseName(grp.chapters[ci]) + " :: " + areas[ai];
+  return raw.replace(/[.$#\[\]\/]/g,'_'); // Firebase keys can't contain . $ # [ ] /
 }
 
 // overlay = items rolled up (read-only) from OTHER trackers. Recomputed on load and
@@ -310,8 +337,34 @@ function renderFoot(){
 }
 
 function toggle(si,gi,ci,ai,on){ const k=key(si,gi,ci,ai);
-  if(on) state[k]=true; else { delete state[k]; delete overlay[k]; } // clearing overlay lets a rolled-up item be un-ticked (it returns on reload)
-  save(); renderTabs(); renderSubject(); renderFoot(); }
+  if(on) state[k]=true; else delete state[k];
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  pushOwn(k,on);      // merge just this cell into our own cloud record (won't clobber concurrent writes)
+  if(on) rollUp(k);   // and durably mark it covered in the Full Syllabus tracker
+  renderTabs(); renderSubject(); renderFoot(); }
+
+// Merge a single cell into this tracker's own cloud node (PATCH), rather than
+// overwriting the whole node - so a roll-up landing at the same time isn't lost.
+function pushOwn(k,on){
+  const url=remoteUrl(); if(!url) return;
+  setSync('Saving…');
+  const body={}; body[k]=on?true:null;
+  fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(r=>{ if(!r.ok) throw 0; setSync('✓ Synced across devices'); })
+    .catch(()=>setSync('Offline – saved on this device'));
+}
+
+// One-way roll-up: a test writes the covered item straight into the Full Syllabus
+// tracker's cloud record (a merge, so it only adds). Because it's written once and
+// persisted there, later resetting or un-ticking the test never removes it from the
+// Full Syllabus - coverage for the year stays put. Full Syllabus can still be edited
+// or reset on its own. Only trackers with a rollup_to target (the tests) push.
+function rollUp(k){
+  if(!SYLLABUS.rollup_to || !SYNC || !SYNC.db_url) return;
+  const url=SYNC.db_url.replace(/\/+$/,'')+"/trackers/"+encodeURIComponent(SYLLABUS.rollup_to)+".json";
+  const body={}; body[k]=true;
+  fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(()=>{});
+}
 
 /* ---------- menus ---------- */
 function toggleMenu(id){
@@ -407,43 +460,59 @@ function importJSON(e){
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-// --- One-way roll-up (tests -> Full Syllabus) ---
-// When aggregate_tests is set, this tracker pulls every OTHER tracker's ticks in one
-// request and overlays any that match a cell it also has. Because keys are semantic,
-// "Water Resources / NCERT Read" ticked in a weekly test shows as done here too. It
-// never writes back, so the roll-up stays one-directional.
-let VALID=null;
-function validKeys(){
-  if(VALID) return VALID;
-  VALID=new Set();
-  SYLLABUS.subjects.forEach((sub,si)=>sub.groups.forEach((grp,gi)=>{
-    const areas=areasFor(sub,grp);
-    grp.chapters.forEach((ch,ci)=>areas.forEach((_,ai)=>VALID.add(key(si,gi,ci,ai))));
-  }));
-  return VALID;
-}
-async function aggregateTests(){
-  if(!SYLLABUS.aggregate_tests || !SYNC || !SYNC.db_url) return;
-  try{
-    const r=await fetch(SYNC.db_url.replace(/\/+$/,'')+"/trackers.json",{cache:'no-store'});
-    if(!r.ok) throw 0;
-    const all=await r.json(); if(!all || typeof all!=='object') return;
-    const mine=SYLLABUS.tracker_id, valid=validKeys();
-    overlay={}; let n=0, srcs=0;
-    Object.keys(all).forEach(tid=>{
-      if(tid===mine) return;
-      const st=all[tid]; if(!st || typeof st!=='object') return;
-      let used=false;
-      Object.keys(st).forEach(k=>{ if(st[k]===true && valid.has(k) && !state[k]){ overlay[k]=true; n++; used=true; } });
-      if(used) srcs++;
+// --- To-do / prep targets (its own Firebase node, never touches the trackers) ---
+function initTodo(opts){
+  const dbUrl=opts.dbUrl||null, listId=opts.listId, mount=document.getElementById(opts.mountId);
+  if(!mount) return;
+  const title=opts.title||"To-Do", CATS=opts.cats||["Self-goal","Homework","Tuition","Target"];
+  const KEY="todo::"+listId, url=dbUrl? dbUrl.replace(/\/+$/,'')+"/todos/"+encodeURIComponent(listId)+".json":null;
+  const chipClass={"Homework":"homework","Tuition":"tuition","Self-goal":"selfgoal","Target":"target"};
+  let items=[]; try{const r=localStorage.getItem(KEY); if(r)items=JSON.parse(r);}catch(e){}
+  let pushT=null;
+  function persist(){ try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}
+    if(url){clearTimeout(pushT);pushT=setTimeout(()=>{fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(items)}).catch(()=>{});},500);} }
+  async function load(){ if(url){try{const r=await fetch(url,{cache:'no-store'}); if(r.ok){const dd=await r.json(); if(Array.isArray(dd)){items=dd; try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}}}}catch(e){}} render(); }
+  function today(){const t=new Date();t.setHours(0,0,0,0);return t;}
+  function fmtDue(dstr){ if(!dstr)return null; const dt=new Date(dstr+"T00:00:00"); const diff=Math.round((dt-today())/86400000);
+    let cls="",lbl=dt.toLocaleDateString(undefined,{day:'numeric',month:'short'}); if(diff<0)cls="over"; else if(diff===0){cls="today";lbl="Today";} else if(diff===1)lbl="Tomorrow"; return {cls,lbl}; }
+  function sorted(){ return items.slice().sort((a,b)=>{ if(a.done!==b.done)return a.done?1:-1; const ad=a.d||"9999-99",bd=b.d||"9999-99"; return ad<bd?-1:ad>bd?1:0; }); }
+  function render(){
+    mount.innerHTML="";
+    const h=document.createElement("h3"); h.textContent=title; mount.appendChild(h);
+    const row=document.createElement("div"); row.className="td-add";
+    const inp=document.createElement("input"); inp.type="text"; inp.placeholder="Add a task…";
+    const sel=document.createElement("select"); CATS.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;sel.appendChild(o);});
+    const due=document.createElement("input"); due.type="date";
+    const btn=document.createElement("button"); btn.textContent="Add";
+    function addNow(){ if(!inp.value.trim())return; items.push({id:Date.now()+""+Math.random().toString(36).slice(2,6),t:inp.value.trim(),c:sel.value,d:due.value,done:false}); inp.value="";due.value=""; persist(); render(); }
+    btn.addEventListener("click",addNow); inp.addEventListener("keydown",e=>{if(e.key==="Enter")addNow();});
+    row.append(inp,sel,due,btn); mount.appendChild(row);
+    const list=document.createElement("div"); const arr=sorted();
+    if(!arr.length){const e=document.createElement("div");e.className="td-empty";e.textContent="No tasks yet — add homework, tuition work, or a prep goal above.";list.appendChild(e);}
+    arr.forEach(it=>{
+      const el=document.createElement("div"); el.className="td-item"+(it.done?" done":"");
+      const cb=document.createElement("input");cb.type="checkbox";cb.className="td-cb";cb.checked=it.done;
+      cb.addEventListener("change",()=>{it.done=cb.checked;persist();render();});
+      const tx=document.createElement("span");tx.className="td-text";tx.textContent=it.t;
+      el.append(cb,tx);
+      if(it.c){const ch=document.createElement("span");ch.className="td-chip "+(chipClass[it.c]||"");ch.textContent=it.c;el.appendChild(ch);}
+      const fd=fmtDue(it.d); if(fd){const dv=document.createElement("span");dv.className="td-due "+fd.cls;dv.textContent=fd.lbl;el.appendChild(dv);}
+      const del=document.createElement("button");del.className="td-del";del.innerHTML="&times;";del.title="Delete";
+      del.addEventListener("click",()=>{items=items.filter(x=>x.id!==it.id);persist();render();});
+      el.appendChild(del); list.appendChild(el);
     });
-    renderTabs(); renderSubject(); renderFoot();
-    if(n>0) setSync('✓ Synced · '+n+' item'+(n>1?'s':'')+' rolled up from '+srcs+' test'+(srcs>1?'s':''));
-  }catch(e){}
+    mount.appendChild(list);
+  }
+  render(); load();
 }
 
 renderAll();
-(async function(){ await loadRemote(); await aggregateTests(); })();
+loadRemote();
+if(SYLLABUS.tracker_id){
+  const tp=document.getElementById('todoPanel'); if(tp) tp.style.display='block';
+  initTodo({ dbUrl: SYNC && SYNC.db_url, listId: SYLLABUS.tracker_id, mountId:'todoPanel',
+             title: SYLLABUS.rollup_to ? 'Prep targets & notes' : 'To-Do & notes' });
+}
 </script>
 </body>
 </html>
