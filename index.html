@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Tracker</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1f2430; --muted:#6b7280;
+    --line:#e6e8ef; --accent:#4f46e5; --accent-soft:#eef0ff;
+    --done:#16a34a; --done-soft:#e7f6ec; --track:#eceef4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 16px 60px}
+  header{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;justify-content:space-between;margin-bottom:6px}
+  h1{font-size:22px;margin:0}
+  .sub{color:var(--muted);font-size:13px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+  button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    padding:7px 12px;border-radius:8px;cursor:pointer}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .overall{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+  .bar{height:10px;background:var(--track);border-radius:99px;overflow:hidden}
+  .bar>span{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
+  .bar.full>span{background:var(--done)}
+  .barrow{display:flex;align-items:center;gap:12px}
+  .barrow .bar{flex:1}
+  .pct{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);min-width:70px;text-align:right}
+  .subject{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .subject>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px}
+  .subject>summary::-webkit-details-marker{display:none}
+  .subject>summary .chev{transition:transform .2s;color:var(--muted)}
+  .subject[open]>summary .chev{transform:rotate(90deg)}
+  .subject h2{font-size:16px;margin:0;flex:1}
+  .group-title{font-size:13px;font-weight:600;color:var(--accent);padding:12px 16px 4px}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:520px}
+  th,td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);font-size:13px}
+  th{color:var(--muted);font-weight:600;background:#fafbff;position:sticky}
+  td.ch{min-width:190px}
+  .cell{text-align:center}
+  .chk{width:20px;height:20px;cursor:pointer;accent-color:var(--accent)}
+  tr.done td.ch{color:var(--done);font-weight:600}
+  .chprog{font-size:11px;color:var(--muted);white-space:nowrap}
+  .foot{color:var(--muted);font-size:12px;margin-top:20px;text-align:center}
+  .note{background:#fff8e6;border:1px solid #f2e2b3;color:#7a5b00;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="title">Study Tracker</h1>
+      <div class="sub" id="subtitle"></div>
+    </div>
+  </header>
+
+  <div class="note" id="seednote"></div>
+
+  <div class="overall">
+    <div class="barrow">
+      <strong style="min-width:120px">Overall progress</strong>
+      <div class="bar" id="overallbar"><span></span></div>
+      <div class="pct" id="overallpct">0%</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button onclick="expandAll(true)">Expand all</button>
+    <button onclick="expandAll(false)">Collapse all</button>
+    <button onclick="exportJSON()">Export progress</button>
+    <button onclick="document.getElementById('imp').click()">Import progress</button>
+    <input id="imp" type="file" accept="application/json" style="display:none" onchange="importJSON(event)">
+    <button onclick="resetAll()">Reset all</button>
+  </div>
+
+  <div id="subjects"></div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const SYLLABUS = {"student": "Kashika", "grade": "CBSE Class 10", "note": "Seed syllabus based on the CBSE 2025-26 course. Chapter lists (especially Hindi and English) can vary by school and by the exact NCERT edition Kashika uses, so treat this as an editable starting point and correct anything that does not match her books.", "practice_areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet"], "common_areas": ["Revision Assignments", "Weekly Test Papers / Model Test Paper"], "subjects": [{"name": "Social Science (SST)", "groups": [{"name": "History – India and the Contemporary World-II", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Book Marked Questions", "Assignment (MCQ & A-R)", "Worksheet", "Sagar's MCQ & Assertion-Reason", "Map Work"], "chapters": ["The Rise of Nationalism in Europe", "Nationalism in India", "The Making of a Global World", "The Age of Industrialisation", "Print Culture and the Modern World"]}, {"name": "Geography – Contemporary India-II", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet", "Sagar's MCQ & Assertion-Reason", "Map Work"], "chapters": ["Resources and Development", "Forest and Wildlife Resources", "Water Resources", "Agriculture", "Minerals and Energy Resources", "Manufacturing Industries", "Lifelines of National Economy"]}, {"name": "Political Science – Democratic Politics-II", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Book Marked Questions", "Assignment (MCQ & A-R)", "Worksheet", "Sagar's MCQ & Assertion-Reason"], "chapters": ["Power Sharing", "Federalism", "Gender, Religion and Caste", "Political Parties", "Outcomes of Democracy"]}, {"name": "Economics – Understanding Economic Development", "areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet", "Sagar's MCQ & Assertion-Reason"], "chapters": ["Development", "Sectors of the Indian Economy", "Money and Credit", "Globalisation and the Indian Economy", "Consumer Rights"]}]}, {"name": "Science", "groups": [{"name": "Chemistry", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Practical"], "chapters": ["Chemical Reactions and Equations", "Acids, Bases and Salts", "Metals and Non-metals", "Carbon and its Compounds"]}, {"name": "Biology", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Diagrams"], "chapters": ["Life Processes", "How do Organisms Reproduce?", "Heredity", "Our Environment"]}, {"name": "Physics", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Numericals"], "chapters": ["Light – Reflection and Refraction", "The Human Eye and the Colourful World", "Electricity", "Magnetic Effects of Electric Current"]}]}, {"name": "Mathematics", "areas": ["NCERT Examples", "NCERT Exercises", "RD Examples", "RD Exercises", "Worksheets"], "groups": [{"name": "", "chapters": ["Real Numbers", "Polynomials", "Pair of Linear Equations in Two Variables", "Quadratic Equations", "Arithmetic Progressions", "Triangles", "Coordinate Geometry", "Introduction to Trigonometry", "Some Applications of Trigonometry", "Circles", "Areas Related to Circles", "Surface Areas and Volumes", "Statistics", "Probability"]}]}, {"name": "English", "extra_areas": ["BBC Compacta"], "groups": [{"name": "First Flight – Prose", "chapters": ["A Letter to God", "Nelson Mandela: Long Walk to Freedom", "Two Stories about Flying", "From the Diary of Anne Frank", "Glimpses of India", "Mijbil the Otter", "Madam Rides the Bus", "The Sermon at Benares", "The Proposal"]}, {"name": "First Flight – Poetry", "chapters": ["Dust of Snow / Fire and Ice", "A Tiger in the Zoo", "How to Tell Wild Animals", "The Ball Poem", "Amanda!", "The Trees", "Fog", "The Tale of Custard the Dragon", "For Anne Gregory"]}, {"name": "Footprints Without Feet", "chapters": ["A Triumph of Surgery", "The Thief's Story", "The Midnight Visitor", "A Question of Trust", "Footprints without Feet", "The Making of a Scientist", "The Necklace", "Bholi", "The Book That Saved the Earth"]}]}, {"name": "Hindi (Course B)", "extra_areas": ["All In One"], "groups": [{"name": "Sparsh Bhag 2 – Kavya (Poetry)", "chapters": ["Saakhi – Kabir", "Pad – Meera", "Manushyata – Maithilisharan Gupt", "Parvat Pradesh Mein Paavas – Sumitranandan Pant", "Top – Veeren Dangwal", "Kar Chale Hum Fida – Kaifi Azmi", "Aatmtraan – Rabindranath Tagore"]}, {"name": "Sparsh Bhag 2 – Gadya (Prose)", "chapters": ["Bade Bhai Sahab – Premchand", "Diary Ka Ek Panna – Sitaram Seksaria", "Tataanra-Vaameero Katha – Leeladhar Mandloi", "Teesri Kasam Ke Shilpkaar Shailendra – Prahlad Agarwal", "Ab Kahan Doosron Ke Dukh Mein Shaamil Hone Wale – Nida Fazli", "Patjhar Mein Tooti Pattiyaan – Ravindra Kelekar", "Kartoos – Habib Tanvir"]}, {"name": "Sanchayan Bhag 2 (Supplementary)", "chapters": ["Harihar Kaka – Midhilesh Kumar Rai", "Sapno Ke Se Din – Gurdial Singh", "Topi Shukla – Rahi Masoom Raza"]}]}]};
+// Practice-area columns can differ per subject and per group. A chapter's columns
+// are the shared base areas, plus any the subject adds (e.g. SST's "Sagar's MCQ"),
+// plus any the group adds (e.g. Science > Physics adds "Numericals"). This is why
+// SST History shows Map Work but Economics does not.
+const BASE_AREAS = SYLLABUS.practice_areas || [];
+function areasFor(sub, grp){
+  // A group or subject can fully replace the base columns with its own `areas`
+  // (Maths uses NCERT/RD examples+exercises instead of the shared set). Otherwise
+  // columns are the base plus whatever the subject and group add via extra_areas.
+  // common_areas are appended to every subject's columns (rightmost) so a
+  // cross-cutting area like "Weekly Test Papers" shows up everywhere at once.
+  let a;
+  if(grp && grp.areas) a = grp.areas.slice();
+  else if(sub.areas) a = sub.areas.slice();
+  else a = BASE_AREAS.concat(sub.extra_areas || [], (grp && grp.extra_areas) || []);
+  return a.concat(SYLLABUS.common_areas || []);
+}
+// tracker_id keeps each tracker's progress independent - a weekly-test tracker
+// must not share saved ticks with the master syllabus tracker. Falls back to
+// student+grade so the master tracker keeps its existing saved progress.
+const STORE_KEY = "study-tracker::" + (SYLLABUS.tracker_id || ((SYLLABUS.student||"student") + "::" + (SYLLABUS.grade||"")));
+
+// state: { "subjectIdx|groupIdx|chapterIdx|areaIdx": true }
+let state = {};
+try { const raw = localStorage.getItem(STORE_KEY); if(raw) state = JSON.parse(raw); } catch(e){}
+
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+function key(s,g,c,a){ return s+"|"+g+"|"+c+"|"+a; }
+
+function chapterCount(){
+  let total=0, done=0;
+  SYLLABUS.subjects.forEach((sub,si)=>sub.groups.forEach((grp,gi)=>{
+    const areas=areasFor(sub,grp);
+    grp.chapters.forEach((ch,ci)=>areas.forEach((_,ai)=>{ total++; if(state[key(si,gi,ci,ai)]) done++; }));
+  }));
+  return {total,done};
+}
+function subjectPct(si){
+  let total=0,done=0; const sub=SYLLABUS.subjects[si];
+  sub.groups.forEach((grp,gi)=>{
+    const areas=areasFor(sub,grp);
+    grp.chapters.forEach((ch,ci)=>areas.forEach((_,ai)=>{ total++; if(state[key(si,gi,ci,ai)]) done++; }));
+  });
+  return total? Math.round(done/total*100):0;
+}
+
+function render(){
+  document.getElementById('title').textContent = SYLLABUS.title || ((SYLLABUS.student? SYLLABUS.student+"'s " : "") + "Study Tracker");
+  document.getElementById('subtitle').textContent = SYLLABUS.subtitle || SYLLABUS.grade || "";
+  document.getElementById('seednote').textContent = SYLLABUS.note || "";
+  if(!SYLLABUS.note) document.getElementById('seednote').style.display='none';
+
+  const root = document.getElementById('subjects'); root.innerHTML='';
+  SYLLABUS.subjects.forEach((sub,si)=>{
+    const det = document.createElement('details'); det.className='subject'; det.open = si===0;
+    const pct = subjectPct(si);
+    det.innerHTML = `<summary>
+        <span class="chev">▶</span>
+        <h2>${escapeHtml(sub.name)}</h2>
+        <div class="bar ${pct===100?'full':''}" style="width:160px"><span style="width:${pct}%"></span></div>
+        <div class="pct">${pct}%</div>
+      </summary>`;
+    sub.groups.forEach((grp,gi)=>{
+      if(grp.name){ const gt=document.createElement('div'); gt.className='group-title'; gt.textContent=grp.name; det.appendChild(gt); }
+      const areas=areasFor(sub,grp);
+      const wrap=document.createElement('div'); wrap.className='tablewrap';
+      const tbl=document.createElement('table');
+      let head='<tr><th class="ch">Chapter</th>';
+      areas.forEach(a=> head+=`<th class="cell">${escapeHtml(a)}</th>`);
+      head+='<th class="cell">Done</th></tr>';
+      tbl.innerHTML=head;
+      grp.chapters.forEach((ch,ci)=>{
+        const tr=document.createElement('tr');
+        let doneCount=0; areas.forEach((_,ai)=>{ if(state[key(si,gi,ci,ai)]) doneCount++; });
+        const full = doneCount===areas.length;
+        if(full) tr.className='done';
+        let row=`<td class="ch">${escapeHtml(ch)}</td>`;
+        areas.forEach((_,ai)=>{
+          const on = !!state[key(si,gi,ci,ai)];
+          row+=`<td class="cell"><input type="checkbox" class="chk" ${on?'checked':''}
+                 onchange="toggle(${si},${gi},${ci},${ai},this.checked)"></td>`;
+        });
+        row+=`<td class="cell chprog">${doneCount}/${areas.length}</td>`;
+        tr.innerHTML=row; tbl.appendChild(tr);
+      });
+      wrap.appendChild(tbl); det.appendChild(wrap);
+    });
+    root.appendChild(det);
+  });
+  const {total,done}=chapterCount();
+  const opct= total? Math.round(done/total*100):0;
+  document.getElementById('overallpct').textContent=opct+'%';
+  const ob=document.getElementById('overallbar');
+  ob.classList.toggle('full',opct===100);
+  ob.querySelector('span').style.width=opct+'%';
+  document.getElementById('foot').textContent =
+    `${done} of ${total} items complete · progress saves automatically on this device`;
+}
+
+function toggle(si,gi,ci,ai,on){ const k=key(si,gi,ci,ai); if(on)state[k]=true; else delete state[k]; save(); render(); }
+function expandAll(open){ document.querySelectorAll('details.subject').forEach(d=>d.open=open); }
+function resetAll(){ if(confirm('Clear all progress?')){ state={}; save(); render(); } }
+function exportJSON(){
+  const blob=new Blob([JSON.stringify({student:SYLLABUS.student,grade:SYLLABUS.grade,state},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=(SYLLABUS.student||'study')+'-progress.json'; a.click();
+}
+function importJSON(e){
+  const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); state=d.state||d; save(); render(); }catch(err){ alert('Could not read that file.'); } };
+  r.readAsText(f);
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+render();
+</script>
+</body>
+</html>
