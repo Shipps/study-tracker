@@ -157,7 +157,11 @@
 
       <div class="menu" id="dlmenu"><div class="head">Download progress report (PDF)</div><div id="dlitems"></div></div>
       <div class="menu" id="setmenu">
-        <div class="head">Settings</div>
+        <div class="head">Backup</div>
+        <button onclick="exportJSON();closeMenus()">Export progress (.json)</button>
+        <button onclick="document.getElementById('imp').click()">Import progress (.json)</button>
+        <input id="imp" type="file" accept="application/json" style="display:none" onchange="importJSON(event)">
+        <div class="sep"></div>
         <button class="danger" onclick="openReset()">Reset progress…</button>
       </div>
     </div>
@@ -198,7 +202,7 @@
 <div id="printReport"></div>
 
 <script>
-const SYLLABUS = {"student": "Kashika", "grade": "CBSE Class 10", "title": "Weekly Test 2 — Science", "subtitle": "Test date: 3 Aug 2026", "tracker_id": "weekly-cycle2-science", "practice_areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet"], "common_areas": ["Revision Assignments", "Weekly Test Papers / Model Test Paper"], "subjects": [{"name": "Science", "groups": [{"name": "Physics", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Numericals"], "chapters": ["Light – Reflection and Refraction (partly)", "The Human Eye and the Colourful World (partly)"]}, {"name": "Chemistry", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Practical"], "chapters": ["Acids, Bases and Salts (partly)"]}, {"name": "Biology", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Diagrams"], "chapters": ["Life Processes (partly)", "Control and Coordination (partly)"]}]}], "sync": {"db_url": "https://study-tracker-96b2a-default-rtdb.firebaseio.com/"}, "home": "../index.html", "rollup_to": "full-syllabus"};
+const SYLLABUS = {"student": "Kashika", "grade": "CBSE Class 10", "title": "Weekly Test 2 — Science", "subtitle": "Test date: 3 Aug 2026", "tracker_id": "weekly-cycle2-science", "practice_areas": ["NCERT Read", "NCERT Exercises", "Notebook", "Assignment", "Worksheet"], "common_areas": ["Revision Assignments", "Weekly Test Papers / Model Test Paper"], "subjects": [{"name": "Science", "groups": [{"name": "Physics", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Numericals"], "chapters": ["Light – Reflection and Refraction (Lenses onwards till end of chapter)", "The Human Eye and the Colourful World (till Defects of Vision)"]}, {"name": "Chemistry", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Practical"], "chapters": ["Acids, Bases and Salts (untested part)"]}, {"name": "Biology", "areas": ["NCERT Read", "NCERT Exercises", "School Notes & Worksheets", "Assignment", "Pradeep Q-bank", "Diagrams"], "chapters": ["Life Processes (Transportation in plants till end · pg 94)", "Control and Coordination (till before reflex action · pg 101)"]}]}], "sync": {"db_url": "https://study-tracker-96b2a-default-rtdb.firebaseio.com/"}, "home": "../index.html", "rollup_to": "full-syllabus"};
 const BASE_AREAS = SYLLABUS.practice_areas || [];
 function areasFor(sub, grp){
   // A group or subject can fully replace the base columns with its own `areas`
