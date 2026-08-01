@@ -1,0 +1,278 @@
+{
+  "student": "Kashika",
+  "grade": "CBSE Class 10",
+  "tracker_id": "full-syllabus",
+  "practice_areas": [
+    "NCERT Read",
+    "NCERT Exercises",
+    "Notebook",
+    "Assignment",
+    "Worksheet"
+  ],
+  "common_areas": [
+    "Revision Assignments",
+    "Weekly Test Papers / Model Test Paper"
+  ],
+  "subjects": [
+    {
+      "name": "Social Science (SST)",
+      "groups": [
+        {
+          "name": "History – India and the Contemporary World-II",
+          "areas": [
+            "NCERT Read",
+            "NCERT Exercises",
+            "Notebook",
+            "Book Marked Questions",
+            "Assignment (MCQ & A-R)",
+            "Worksheet",
+            "Sagar's MCQ & Assertion-Reason",
+            "Map Work"
+          ],
+          "chapters": [
+            "The Rise of Nationalism in Europe",
+            "Nationalism in India",
+            "The Making of a Global World",
+            "The Age of Industrialisation",
+            "Print Culture and the Modern World"
+          ]
+        },
+        {
+          "name": "Geography – Contemporary India-II",
+          "areas": [
+            "NCERT Read",
+            "NCERT Exercises",
+            "Notebook",
+            "Assignment",
+            "Worksheet",
+            "Sagar's MCQ & Assertion-Reason",
+            "Map Work"
+          ],
+          "chapters": [
+            "Resources and Development",
+            "Forest and Wildlife Resources",
+            "Water Resources",
+            "Agriculture",
+            "Minerals and Energy Resources",
+            "Manufacturing Industries",
+            "Lifelines of National Economy"
+          ]
+        },
+        {
+          "name": "Political Science – Democratic Politics-II",
+          "areas": [
+            "NCERT Read",
+            "NCERT Exercises",
+            "Notebook",
+            "Book Marked Questions",
+            "Assignment (MCQ & A-R)",
+            "Worksheet",
+            "Sagar's MCQ & Assertion-Reason"
+          ],
+          "chapters": [
+            "Power Sharing",
+            "Federalism",
+            "Gender, Religion and Caste",
+            "Political Parties",
+            "Outcomes of Democracy"
+          ]
+        },
+        {
+          "name": "Economics – Understanding Economic Development",
+          "areas": [
+            "NCERT Read",
+            "NCERT Exercises",
+            "Notebook",
+            "Assignment",
+            "Worksheet",
+            "Sagar's MCQ & Assertion-Reason"
+          ],
+          "chapters": [
+            "Development",
+            "Sectors of the Indian Economy",
+            "Money and Credit",
+            "Globalisation and the Indian Economy",
+            "Consumer Rights"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Science",
+      "groups": [
+        {
+          "name": "Chemistry",
+          "areas": [
+            "NCERT Read",
+            "NCERT Exercises",
+            "School Notes & Worksheets",
+            "Assignment",
+            "Pradeep Q-bank",
+            "Practical"
+          ],
+          "chapters": [
+            "Chemical Reactions and Equations",
+            "Acids, Bases and Salts",
+            "Metals and Non-metals",
+            "Carbon and its Compounds"
+          ]
+        },
+        {
+          "name": "Biology",
+          "areas": [
+            "NCERT Read",
+            "NCERT Exercises",
+            "School Notes & Worksheets",
+            "Assignment",
+            "Pradeep Q-bank",
+            "Diagrams"
+          ],
+          "chapters": [
+            "Life Processes",
+            "How do Organisms Reproduce?",
+            "Heredity",
+            "Our Environment"
+          ]
+        },
+        {
+          "name": "Physics",
+          "areas": [
+            "NCERT Read",
+            "NCERT Exercises",
+            "School Notes & Worksheets",
+            "Assignment",
+            "Pradeep Q-bank",
+            "Numericals"
+          ],
+          "chapters": [
+            "Light – Reflection and Refraction",
+            "The Human Eye and the Colourful World",
+            "Electricity",
+            "Magnetic Effects of Electric Current"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mathematics",
+      "areas": [
+        "NCERT Examples",
+        "NCERT Exercises",
+        "RD Examples",
+        "RD Exercises",
+        "Worksheets"
+      ],
+      "groups": [
+        {
+          "name": "",
+          "chapters": [
+            "Real Numbers",
+            "Polynomials",
+            "Pair of Linear Equations in Two Variables",
+            "Quadratic Equations",
+            "Arithmetic Progressions",
+            "Triangles",
+            "Coordinate Geometry",
+            "Introduction to Trigonometry",
+            "Some Applications of Trigonometry",
+            "Circles",
+            "Areas Related to Circles",
+            "Surface Areas and Volumes",
+            "Statistics",
+            "Probability"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "English",
+      "extra_areas": [
+        "BBC Compacta"
+      ],
+      "groups": [
+        {
+          "name": "First Flight – Prose",
+          "chapters": [
+            "A Letter to God",
+            "Nelson Mandela: Long Walk to Freedom",
+            "Two Stories about Flying",
+            "From the Diary of Anne Frank",
+            "Glimpses of India",
+            "Mijbil the Otter",
+            "Madam Rides the Bus",
+            "The Sermon at Benares",
+            "The Proposal"
+          ]
+        },
+        {
+          "name": "First Flight – Poetry",
+          "chapters": [
+            "Dust of Snow / Fire and Ice",
+            "A Tiger in the Zoo",
+            "How to Tell Wild Animals",
+            "The Ball Poem",
+            "Amanda!",
+            "The Trees",
+            "Fog",
+            "The Tale of Custard the Dragon",
+            "For Anne Gregory"
+          ]
+        },
+        {
+          "name": "Footprints Without Feet",
+          "chapters": [
+            "A Triumph of Surgery",
+            "The Thief's Story",
+            "The Midnight Visitor",
+            "A Question of Trust",
+            "Footprints without Feet",
+            "The Making of a Scientist",
+            "The Necklace",
+            "Bholi",
+            "The Book That Saved the Earth"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Hindi (Course B)",
+      "extra_areas": [
+        "All In One"
+      ],
+      "groups": [
+        {
+          "name": "Sparsh Bhag 2 – Kavya (Poetry)",
+          "chapters": [
+            "Saakhi – Kabir",
+            "Pad – Meera",
+            "Manushyata – Maithilisharan Gupt",
+            "Parvat Pradesh Mein Paavas – Sumitranandan Pant",
+            "Top – Veeren Dangwal",
+            "Kar Chale Hum Fida – Kaifi Azmi",
+            "Aatmtraan – Rabindranath Tagore"
+          ]
+        },
+        {
+          "name": "Sparsh Bhag 2 – Gadya (Prose)",
+          "chapters": [
+            "Bade Bhai Sahab – Premchand",
+            "Diary Ka Ek Panna – Sitaram Seksaria",
+            "Tataanra-Vaameero Katha – Leeladhar Mandloi",
+            "Teesri Kasam Ke Shilpkaar Shailendra – Prahlad Agarwal",
+            "Ab Kahan Doosron Ke Dukh Mein Shaamil Hone Wale – Nida Fazli",
+            "Patjhar Mein Tooti Pattiyaan – Ravindra Kelekar",
+            "Kartoos – Habib Tanvir"
+          ]
+        },
+        {
+          "name": "Sanchayan Bhag 2 (Supplementary)",
+          "chapters": [
+            "Harihar Kaka – Midhilesh Kumar Rai",
+            "Sapno Ke Se Din – Gurdial Singh",
+            "Topi Shukla – Rahi Masoom Raza"
+          ]
+        }
+      ]
+    }
+  ]
+}
