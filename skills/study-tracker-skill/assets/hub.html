@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kashika's Study Tracker</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1f2430; --muted:#6b7280;
+    --line:#e6e8ef; --accent:#4f46e5; --accent-soft:#eef0ff;
+    --done:#16a34a; --amber:#b45309; --amber-soft:#fef3e2; --rose:#9f1239; --rose-soft:#ffe4ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45}
+  .wrap{max-width:900px;margin:0 auto;padding:22px 16px 64px}
+  h1{font-size:24px;margin:0}
+  .sub{color:var(--muted);font-size:13px}
+ 
+  .hero{display:flex;align-items:center;gap:16px;margin:20px 0 26px;padding:20px 22px;
+    background:linear-gradient(135deg,#4f46e5,#6d5ef7);color:#fff;border-radius:16px;text-decoration:none;
+    box-shadow:0 10px 26px rgba(79,70,229,.25)}
+  .hero .ic{width:46px;height:46px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.18);border-radius:12px}
+  .hero h2{margin:0;font-size:18px}
+  .hero p{margin:2px 0 0;font-size:13px;opacity:.9}
+  .hero .go{margin-left:auto;font-size:22px}
+ 
+  .navbox{border:1px solid var(--line);background:var(--card);border-radius:14px;overflow:hidden;margin-bottom:12px}
+  .navbox>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 18px}
+  .navbox>summary::-webkit-details-marker{display:none}
+  .nb-ic{width:42px;height:42px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);border-radius:11px}
+  .nb-ic svg{width:22px;height:22px}
+  .nb-txt{flex:1;display:flex;flex-direction:column;min-width:0}
+  .nb-txt b{font-size:16px}
+  .nb-txt small{color:var(--muted);font-size:12.5px}
+  .nb-count{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:2px 9px}
+  .nb-chev{color:var(--muted);transition:transform .2s}
+  .navbox[open] .nb-chev{transform:rotate(90deg)}
+  .navbox[open]>summary{border-bottom:1px solid var(--line)}
+  .nb-body{padding:12px 16px 8px}
+ 
+  .section-h{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:24px 0 12px}
+ 
+  .card{display:flex;gap:16px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px;margin-bottom:12px;text-decoration:none;color:inherit;transition:box-shadow .15s}
+  a.card:hover,.card:hover{box-shadow:0 8px 20px rgba(20,20,40,.08)}
+  .card.next{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+  .cardlinks{display:flex;gap:18px;margin-top:9px;flex-wrap:wrap}
+  .clink{font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap}
+  .clink:hover{text-decoration:underline}
+  .clink.soon{color:var(--muted);font-weight:500}
+  .datebox{flex:none;width:58px;text-align:center;border-radius:10px;padding:8px 4px;background:var(--accent-soft);color:var(--accent)}
+  .datebox .d{font-size:20px;font-weight:800;line-height:1}
+  .datebox .m{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .datebox .y{font-size:10px;opacity:.75}
+  .body{flex:1;min-width:0}
+  .row1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .subj{font-weight:700;font-size:15px}
+  .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+  .badge.exam{background:var(--amber-soft);color:var(--amber)}
+  .badge.pre{background:var(--rose-soft);color:var(--rose)}
+  .nextpill{font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--accent);color:#fff}
+  .scope{color:var(--muted);font-size:12.5px;margin-top:5px}
+  .cta{flex:none;align-self:center;font-size:13px;font-weight:600;color:var(--accent);white-space:nowrap}
+  .cta.soon{color:var(--muted);font-weight:500}
+  .arrow{font-size:16px;margin-left:3px}
+ 
+  details.past{margin-top:8px}
+  details.past summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.05em;list-style:none;padding:8px 0}
+  details.past summary::-webkit-details-marker{display:none}
+  details.past summary::before{content:"\25B8  ";}
+  details.past[open] summary::before{content:"\25BE  ";}
+  .card.done{opacity:.55}
+  .card.done .datebox{background:#eef0f5;color:var(--muted)}
+ 
+  .foot{color:var(--muted);font-size:12px;margin-top:26px;text-align:center}
+ 
+  /* to-do */
+  .todo{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 26px}
+  .todo h3{margin:0 0 12px;font-size:15px;font-weight:700}
+  .td-add{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .td-add input[type=text]{flex:1;min-width:160px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit}
+  .td-add input[type=date]{padding:9px;border:1px solid var(--line);border-radius:8px;font:inherit;color:var(--muted)}
+  .td-add select{padding:9px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--card)}
+  .td-add button{padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
+  .td-item{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px solid var(--line)}
+  .td-item:first-child{border-top:none}
+  .td-item.done{opacity:.5}
+  .td-item.done .td-text{text-decoration:line-through}
+  .td-cb{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex:none}
+  .td-text{flex:1;font-size:14px;word-break:break-word}
+  .td-chip{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+  .td-chip.homework{background:#e0edff;color:#1d4ed8}
+  .td-chip.tuition{background:#efe4ff;color:#7c3aed}
+  .td-chip.selfgoal{background:#e7f6ec;color:#16a34a}
+  .td-chip.target{background:#fef3e2;color:#b45309}
+  .td-due{font-size:11px;color:var(--muted);white-space:nowrap}
+  .td-due.today{color:var(--accent);font-weight:700}
+  .td-due.over{color:#b42318;font-weight:700}
+  .td-del{border:none;background:none;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;flex:none}
+  .td-empty{color:var(--muted);font-size:13px;padding:6px 2px}
+ 
+  .afile{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin-bottom:9px;text-decoration:none;color:inherit;transition:box-shadow .15s}
+  .afile:hover{box-shadow:0 8px 20px rgba(20,20,40,.08)}
+  .aicon{flex:none;font-size:9.5px;font-weight:800;letter-spacing:.02em;padding:4px 7px;border-radius:6px;background:var(--accent-soft);color:var(--accent);min-width:38px;text-align:center}
+  .aname{flex:1;font-weight:600;font-size:14px;word-break:break-word}
+  .ago{color:var(--muted);font-size:15px}
+ 
+  /* header + settings menu + modal */
+  .hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .hicons{position:relative;flex:none}
+  .iconbtn{width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--card);border-radius:10px;cursor:pointer;color:var(--ink)}
+  .iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+  .iconbtn svg{width:19px;height:19px}
+  .menu{position:absolute;top:44px;right:0;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(20,20,40,.12);padding:6px;min-width:230px;z-index:40;display:none}
+  .menu.open{display:block}
+  .menu .head{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:6px 10px 2px}
+  .menu button{display:flex;width:100%;align-items:center;gap:8px;text-align:left;border:0;background:none;padding:9px 10px;border-radius:8px;font:inherit;color:var(--ink);cursor:pointer}
+  .menu button:hover{background:var(--accent-soft)}
+  .menu .danger{color:#b42318}
+  .overlay{position:fixed;inset:0;background:rgba(18,18,35,.42);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+  .overlay.open{display:flex}
+  .modal{background:var(--card);border-radius:16px;max-width:460px;width:100%;padding:20px}
+  .modal h2{margin:0 0 4px;font-size:18px}
+  .modal .close{float:right;border:0;background:none;font-size:20px;cursor:pointer;color:var(--muted)}
+  .modal input[type=text]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;margin-top:10px}
+  .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .btn{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit}
+  .btn.danger{background:#b42318;color:#fff;border-color:#b42318}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div>
+      <h1 id="title">Kashika's Study Tracker</h1>
+      <div class="sub">CBSE Class 10 · 2026&ndash;27</div>
+    </div>
+    <div class="hicons">
+      <button class="iconbtn" title="Settings" onclick="toggleSet()" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.62.78 1.05 1.42 1.05H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="menu" id="hubmenu">
+        <div class="head">Backup &amp; restore</div>
+        <button onclick="backupAll();closeSet()">&#8595; Backup all (download)</button>
+        <button class="danger" onclick="openRestore()">&#8593; Restore all&hellip;</button>
+        <input id="restoreFile" type="file" accept="application/json" style="display:none" onchange="restoreAll(event)">
+      </div>
+    </div>
+  </div>
+ 
+  <a class="hero" href="./full-syllabus.html">
+    <span class="ic">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </span>
+    <div>
+      <h2>Full Syllabus Tracker</h2>
+      <p>Whole-year progress across every subject and chapter</p>
+    </div>
+    <span class="go">&rarr;</span>
+  </a>
+ 
+  <details class="navbox" id="nav-cycletests">
+    <summary>
+      <span class="nb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></span>
+      <span class="nb-txt"><b>Cycle Test Papers</b><small>Question papers for each cycle test</small></span>
+      <span class="nb-count" id="count-cycletests"></span>
+      <span class="nb-chev">&#9654;</span>
+    </summary>
+    <div class="nb-body" id="cyclepapers"><div class="sub">Loading…</div></div>
+  </details>
+ 
+  <details class="navbox" id="nav-assignments">
+    <summary>
+      <span class="nb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v0a2 2 0 0 1 2-2z"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6"/><path d="M9 16h6"/></svg></span>
+      <span class="nb-txt"><b>Assignments</b><small>Assignments, revision & model tests</small></span>
+      <span class="nb-count" id="count-assignments"></span>
+      <span class="nb-chev">&#9654;</span>
+    </summary>
+    <div class="nb-body" id="assignments"><div class="sub">Loading…</div></div>
+  </details>
+ 
+  <div class="todo" id="todoGeneral"></div>
+ 
+  <div id="upcoming"></div>
+ 
+  <details class="past">
+    <summary>Completed &amp; past exams</summary>
+    <div id="past"></div>
+  </details>
+ 
+  <div class="foot" id="foot"></div>
+</div>
+ 
+<div class="overlay" id="restoreOverlay">
+  <div class="modal">
+    <button class="close" onclick="closeOverlay('restoreOverlay')">&times;</button>
+    <h2>Restore all progress?</h2>
+    <div class="sub">This overwrites <strong>all</strong> current cloud progress and to-dos with the backup file you pick. Type <strong>RESTORE</strong> to confirm, then choose the file.</div>
+    <input type="text" id="restoreInput" placeholder="Type RESTORE" autocomplete="off" oninput="checkRestore()">
+    <div class="actions">
+      <button class="btn" onclick="closeOverlay('restoreOverlay')">Cancel</button>
+      <button class="btn danger" id="restoreConfirm" disabled onclick="chooseRestoreFile()">Choose backup file&hellip;</button>
+    </div>
+  </div>
+</div>
+ 
+<script>
+// Edit this list as the year progresses: set "slug"+ready:true once a tracker
+// exists, adjust dates if the teacher changes them. "start"/"end" drive sorting
+// and whether an exam is upcoming or past. "type" picks the badge colour.
+const EXAMS = [
+  { type:"Weekly Test", term:"Cycle II", subject:"English", start:"2026-07-20", end:"2026-07-20",
+    slug:"weekly-cycle2-english", ready:false, scope:"English weekly test" },
+  { type:"Weekly Test", term:"Cycle II", subject:"Social Science", start:"2026-07-27", end:"2026-07-27",
+    slug:"weekly-cycle2-sst", ready:true,
+    scope:"History: Nationalism in Europe (till pg 4), Making of a Global World (till pg 56) &middot; Geography: Water Resources, Agriculture (partly) &middot; Pol Science: Federalism (decentralisation), Gender Religion &amp; Caste (till pg 35) &middot; Economics: Sectors of the Indian Economy (till pg 29) &middot; Maps: Major Crops" },
+  { type:"Weekly Test", term:"Cycle II", subject:"Science", start:"2026-08-03", end:"2026-08-03",
+    slug:"weekly-cycle2-science", ready:true,
+    scope:"Physics: Light–Reflection &amp; Refraction (Lenses onwards), Human Eye (till Defects of Vision) &middot; Chemistry: Acids, Bases &amp; Salts (untested part) &middot; Biology: Life Processes (Transportation in plants onwards), Control &amp; Coordination (till before reflex action)" },
+  { type:"Weekly Test", term:"Cycle II", subject:"Hindi", start:"2026-08-10", end:"2026-08-10",
+    slug:"weekly-cycle2-hindi", ready:true, scope:"पाठ: मीरा के पद, तताँरा-वामीरो कथा &middot; व्याकरण/लेखन: अनुच्छेद, अपठित गद्यांश, पदबंध, सूचना लेखन" },
+  { type:"Weekly Test", term:"Cycle II", subject:"Maths", start:"2026-08-17", end:"2026-08-17",
+    slug:"weekly-cycle2-maths", ready:true, scope:"Triangles, Statistics, Areas Related to Circles" },
+ 
+  { type:"Semester Exam", term:"Semester I", subject:"All subjects", start:"2026-09-19", end:"2026-10-01",
+    slug:"mid-sem-term1-all", ready:false, scope:"Semester I Examination &middot; 19 Sep &ndash; 1 Oct 2026" },
+ 
+  { type:"Weekly Test", term:"Cycle III", subject:"English", start:"2026-10-23", end:"2026-10-23",
+    slug:"weekly-cycle3-english", ready:true, scope:"Comprehension, Formal Letter &amp; Factual Description, Integrated Grammar, Virtually True" },
+  { type:"Weekly Test", term:"Cycle III", subject:"Maths", start:"2026-10-27", end:"2026-10-27",
+    slug:"weekly-cycle3-maths", ready:true, scope:"Quadratic Equations, Arithmetic Progressions, Some Applications of Trigonometry" },
+  { type:"Weekly Test", term:"Cycle III", subject:"Science", start:"2026-11-02", end:"2026-11-02",
+    slug:"weekly-cycle3-science", ready:true,
+    scope:"Physics: Electricity (partly), Magnetic Effects (partly) &middot; Chemistry: Metals &amp; Non-metals (partly), Carbon &amp; its Compounds (partly) &middot; Biology: How do Organisms Reproduce (sexual), Heredity (partly)" },
+  { type:"Weekly Test", term:"Cycle III", subject:"Hindi", start:"2026-11-16", end:"2026-11-16",
+    slug:"weekly-cycle3-hindi", ready:true, scope:"पाठ: पतझड़ में टूटी पत्तियाँ, पर्वत प्रदेश में पावस &middot; व्याकरण/लेखन: समास, लघुकथा लेखन, पत्रलेखन, वाक्य रूपांतरण" },
+  { type:"Weekly Test", term:"Cycle III", subject:"Social Science", start:"2026-11-20", end:"2026-11-20",
+    slug:"weekly-cycle3-sst", ready:true,
+    scope:"History: Print Culture (partly) &middot; Pol Science: Gender Religion &amp; Caste (partly), Political Parties (partly) &middot; Geography: Mineral &amp; Energy Resources (partly) &middot; Economics: Money and Credit (partly)" },
+ 
+  { type:"Pre-Board", term:"Pre-Board I", subject:"All subjects", start:"2026-12-04", end:"2026-12-17",
+    slug:"pre-board-1-all", ready:false, scope:"Pre-Board I Examination &middot; 4 &ndash; 17 Dec 2026" },
+  { type:"Pre-Board", term:"Pre-Board II", subject:"All subjects", start:"2026-12-28", end:"2027-01-12",
+    slug:"pre-board-2-all", ready:false, scope:"Pre-Board II Examination &middot; 28 Dec 2026 &ndash; 12 Jan 2027" }
+];
+ 
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function today(){ const t=new Date(); t.setHours(0,0,0,0); return t; }
+function d(s){ const p=s.split("-").map(Number); return new Date(p[0],p[1]-1,p[2]); }
+function badgeClass(t){ return t==="Pre-Board"?"pre":(t==="Semester Exam"?"exam":""); }
+function daysTo(dt){ return Math.round((dt-today())/86400000); }
+function daysToLabel(s){ const n=daysTo(s); if(n===0)return "today"; if(n===1)return "tomorrow"; if(n>1)return "in "+n+" days"; return ""; }
+ 
+// Filenames in cycle-tests/ (set once the folder loads) so a card can link its paper.
+let cyclePaperSet=null;
+const SUBJ_CODE={English:"english",Maths:"maths",Science:"science",Hindi:"hindi","Social Science":"sst"};
+function paperFor(ex){
+  const m=/Cycle\s+(I{1,3})\b/.exec(ex.term); if(!m) return null;
+  const n={I:1,II:2,III:3}[m[1]], code=SUBJ_CODE[ex.subject];
+  return (n&&code) ? "cycle_test"+n+"_"+code+".pdf" : null;
+}
+function card(ex,isNext){
+  const s=d(ex.start), past=daysTo(d(ex.end))<0;
+  const el=document.createElement('div');
+  el.className="card"+(isNext?" next":"")+(past?" done":"");
+  el.innerHTML=
+    `<div class="datebox"><div class="d">${s.getDate()}</div><div class="m">${MONTHS[s.getMonth()]}</div><div class="y">${s.getFullYear()}</div></div>`+
+    `<div class="body"><div class="row1">`+
+      `<span class="subj">${ex.subject}</span>`+
+      `<span class="badge ${badgeClass(ex.type)}">${ex.type} &middot; ${ex.term}</span>`+
+      (isNext?`<span class="nextpill">NEXT &middot; ${daysToLabel(s)}</span>`:``)+
+    `</div><div class="scope">${ex.scope||""}</div><div class="cardlinks"></div></div>`;
+  const links=el.querySelector('.cardlinks');
+  if(ex.ready){ const a=document.createElement('a'); a.className='clink'; a.href='./test-tracker/'+ex.slug+'.html'; a.innerHTML='Open tracker &rarr;'; links.appendChild(a); }
+  else { const sp=document.createElement('span'); sp.className='clink soon'; sp.textContent='Tracker coming soon'; links.appendChild(sp); }
+  const pn=paperFor(ex);
+  if(pn && cyclePaperSet && cyclePaperSet.has(pn)){ const a=document.createElement('a'); a.className='clink'; a.href='./cycle-tests/'+encodeURIComponent(pn); a.target='_blank'; a.rel='noopener'; a.innerHTML='&#128196; Test paper &#8599;'; links.appendChild(a); }
+  return el;
+}
+ 
+function render(){
+  const upcoming=EXAMS.filter(e=>daysTo(d(e.end))>=0).sort((a,b)=>d(a.start)-d(b.start));
+  const past=EXAMS.filter(e=>daysTo(d(e.end))<0).sort((a,b)=>d(b.start)-d(a.start));
+  const up=document.getElementById('upcoming'); up.innerHTML='<div class="section-h">Upcoming exams</div>';
+  if(upcoming.length) upcoming.forEach((e,i)=>up.appendChild(card(e,i===0)));
+  else up.insertAdjacentHTML('beforeend','<div class="sub">No upcoming exams listed.</div>');
+  const pb=document.getElementById('past'); pb.innerHTML='';
+  if(past.length) past.forEach(e=>pb.appendChild(card(e,false))); else pb.innerHTML='<div class="sub">None yet.</div>';
+  document.getElementById('foot').textContent = upcoming.length+" upcoming · "+past.length+" completed";
+}
+render();
+ 
+// --- Daily to-do (own Firebase node, independent of the trackers) ---
+const TODO_DB = "https://study-tracker-96b2a-default-rtdb.firebaseio.com/";
+function initTodo(opts){
+  const dbUrl=opts.dbUrl||null, listId=opts.listId, mount=document.getElementById(opts.mountId);
+  if(!mount) return;
+  const title=opts.title||"To-Do", CATS=opts.cats||["Self-goal","Homework","Tuition","Target"];
+  const KEY="todo::"+listId, url=dbUrl? dbUrl.replace(/\/+$/,'')+"/todos/"+encodeURIComponent(listId)+".json":null;
+  const chipClass={"Homework":"homework","Tuition":"tuition","Self-goal":"selfgoal","Target":"target"};
+  let items=[]; try{const r=localStorage.getItem(KEY); if(r)items=JSON.parse(r);}catch(e){}
+  let pushT=null;
+  function persist(){ try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}
+    if(url){clearTimeout(pushT);pushT=setTimeout(()=>{fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(items)}).catch(()=>{});},500);} }
+  async function load(){ if(url){try{const r=await fetch(url,{cache:'no-store'}); if(r.ok){const dd=await r.json(); if(Array.isArray(dd)){items=dd; try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}}}}catch(e){}} render2(); }
+  function today(){const t=new Date();t.setHours(0,0,0,0);return t;}
+  function fmtDue(dstr){ if(!dstr)return null; const dt=new Date(dstr+"T00:00:00"); const diff=Math.round((dt-today())/86400000);
+    let cls="",lbl=dt.toLocaleDateString(undefined,{day:'numeric',month:'short'}); if(diff<0)cls="over"; else if(diff===0){cls="today";lbl="Today";} else if(diff===1)lbl="Tomorrow"; return {cls,lbl}; }
+  function sorted(){ return items.slice().sort((a,b)=>{ if(a.done!==b.done)return a.done?1:-1; const ad=a.d||"9999-99",bd=b.d||"9999-99"; return ad<bd?-1:ad>bd?1:0; }); }
+  function render2(){
+    mount.innerHTML="";
+    const h=document.createElement("h3"); h.textContent=title; mount.appendChild(h);
+    const row=document.createElement("div"); row.className="td-add";
+    const inp=document.createElement("input"); inp.type="text"; inp.placeholder="Add a task…";
+    const sel=document.createElement("select"); CATS.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;sel.appendChild(o);});
+    const due=document.createElement("input"); due.type="date";
+    const btn=document.createElement("button"); btn.textContent="Add";
+    function addNow(){ if(!inp.value.trim())return; items.push({id:Date.now()+""+Math.random().toString(36).slice(2,6),t:inp.value.trim(),c:sel.value,d:due.value,done:false}); inp.value="";due.value=""; persist(); render2(); }
+    btn.addEventListener("click",addNow); inp.addEventListener("keydown",e=>{if(e.key==="Enter")addNow();});
+    row.append(inp,sel,due,btn); mount.appendChild(row);
+    const list=document.createElement("div"); const arr=sorted();
+    if(!arr.length){const e=document.createElement("div");e.className="td-empty";e.textContent="No tasks yet — add homework, tuition work, or a prep goal above.";list.appendChild(e);}
+    arr.forEach(it=>{
+      const el=document.createElement("div"); el.className="td-item"+(it.done?" done":"");
+      const cb=document.createElement("input");cb.type="checkbox";cb.className="td-cb";cb.checked=it.done;
+      cb.addEventListener("change",()=>{it.done=cb.checked;persist();render2();});
+      const tx=document.createElement("span");tx.className="td-text";tx.textContent=it.t;
+      el.append(cb,tx);
+      if(it.c){const ch=document.createElement("span");ch.className="td-chip "+(chipClass[it.c]||"");ch.textContent=it.c;el.appendChild(ch);}
+      const fd=fmtDue(it.d); if(fd){const dv=document.createElement("span");dv.className="td-due "+fd.cls;dv.textContent=fd.lbl;el.appendChild(dv);}
+      const del=document.createElement("button");del.className="td-del";del.innerHTML="&times;";del.title="Delete";
+      del.addEventListener("click",()=>{items=items.filter(x=>x.id!==it.id);persist();render2();});
+      el.appendChild(del); list.appendChild(el);
+    });
+    mount.appendChild(list);
+  }
+  render2(); load();
+}
+initTodo({ dbUrl: TODO_DB, listId:"general", mountId:"todoGeneral", title:"To-Do" });
+ 
+// --- Assignments: auto-list files from the repo's /assignments folder ---
+// Leave these null to auto-detect from the GitHub Pages URL; hardcode if needed.
+const GH_USER=null, GH_REPO=null, GH_BRANCH="main";
+function ghInfo(){
+  let user=GH_USER, repo=GH_REPO;
+  if(!user && location.hostname.endsWith(".github.io")) user=location.hostname.split(".")[0];
+  if(!repo){ const seg=location.pathname.split("/").filter(Boolean); if(seg.length) repo=seg[0]; }
+  return (user && repo) ? {user,repo} : null;
+}
+function setCount(id,n){ const el=document.getElementById(id); if(el) el.textContent=n?String(n):""; }
+function fileRow(folder,name){
+  const ext=(name.split('.').pop()||'FILE').toUpperCase();
+  const nice=name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
+  const a=document.createElement('a'); a.className='afile'; a.href='./'+folder+'/'+encodeURIComponent(name); a.target='_blank'; a.rel='noopener';
+  a.innerHTML='<span class="aicon">'+ext+'</span><span class="aname">'+nice+'</span><span class="ago">&#8599;</span>';
+  return a;
+}
+function renderFolder(folder,mountId,countId,files,emptyMsg){
+  const box=document.getElementById(mountId);
+  if(!files){ return; }
+  if(!files.length){ box.innerHTML='<div class="sub">'+emptyMsg+'</div>'; setCount(countId,0); return; }
+  box.innerHTML=''; files.slice().sort((a,b)=>a.localeCompare(b)).forEach(n=>box.appendChild(fileRow(folder,n)));
+  setCount(countId,files.length);
+}
+function cachedList(folder){ try{ const r=localStorage.getItem("folderlist::"+folder); return r?JSON.parse(r):null; }catch(e){ return null; } }
+function cacheList(folder,files){ try{ localStorage.setItem("folderlist::"+folder, JSON.stringify(files)); }catch(e){} }
+ 
+// Load both folders. Strategy for resilience: (1) paint instantly from the last
+// cached listing so a rate limit or offline never blanks the boxes, then (2) refresh
+// with a SINGLE git-tree request (one API call for both folders, half the rate use).
+async function loadFolders(){
+  const A='assignments', C='cycle-tests', gh=ghInfo();
+  const ca=cachedList(A), cc=cachedList(C);
+  if(ca) renderFolder(A,'assignments','count-assignments',ca,'No assignments uploaded yet.');
+  if(cc){ renderFolder(C,'cyclepapers','count-cycletests',cc,'No cycle-test papers uploaded yet.'); cyclePaperSet=new Set(cc); render(); }
+  if(!gh){
+    if(!ca) document.getElementById('assignments').innerHTML='<div class="sub">Appears once opened from your GitHub Pages site.</div>';
+    if(!cc) document.getElementById('cyclepapers').innerHTML='<div class="sub">Appears once opened from your GitHub Pages site.</div>';
+    return;
+  }
+  try{
+    const r=await fetch("https://api.github.com/repos/"+gh.user+"/"+gh.repo+"/git/trees/"+GH_BRANCH+"?recursive=1",{cache:'no-store'});
+    if(!r.ok) throw r.status;
+    const j=await r.json();
+    const paths=(j.tree||[]).filter(t=>t.type==='blob').map(t=>t.path);
+    const inFolder=f=>paths.filter(p=>p.indexOf(f+'/')===0).map(p=>p.slice(f.length+1)).filter(n=>n && n.indexOf('/')<0);
+    const a=inFolder(A), c=inFolder(C);
+    cacheList(A,a); cacheList(C,c);
+    renderFolder(A,'assignments','count-assignments',a,'No assignments uploaded yet.');
+    renderFolder(C,'cyclepapers','count-cycletests',c,'No cycle-test papers uploaded yet.');
+    cyclePaperSet=new Set(c); render();
+  }catch(status){
+    const msg = status===403
+      ? "GitHub rate limit reached (60/hour). It resets within the hour; the list will reappear then."
+      : "Couldn't refresh the file list right now.";
+    if(!ca) document.getElementById('assignments').innerHTML='<div class="sub">'+msg+'</div>';
+    if(!cc) document.getElementById('cyclepapers').innerHTML='<div class="sub">'+msg+'</div>';
+  }
+}
+loadFolders();
+ 
+// --- Backup / restore the whole system (all trackers + all to-dos) ---
+async function backupAll(){
+  const base=TODO_DB.replace(/\/+$/,'');
+  try{
+    const [tr,td]=await Promise.all([
+      fetch(base+"/trackers.json",{cache:'no-store'}).then(r=>r.ok?r.json():null),
+      fetch(base+"/todos.json",{cache:'no-store'}).then(r=>r.ok?r.json():null)
+    ]);
+    const data={exportedAt:new Date().toISOString(),trackers:tr||{},todos:td||{}};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download="kashika-study-backup-"+new Date().toISOString().slice(0,10)+".json"; a.click();
+  }catch(e){ alert("Couldn't read the database to back up. Check you're online and the database is reachable."); }
+}
+function restoreAll(e){
+  const f=e.target.files[0]; if(!f)return; const rd=new FileReader();
+  rd.onload=async()=>{
+    let d; try{ d=JSON.parse(rd.result); }catch(err){ alert("That file isn't valid JSON."); return; }
+    const base=TODO_DB.replace(/\/+$/,'');
+    try{
+      const res=await Promise.all([
+        fetch(base+"/trackers.json",{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d.trackers||{})}),
+        fetch(base+"/todos.json",{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d.todos||{})})
+      ]);
+      if(res.every(r=>r.ok)){ closeOverlay('restoreOverlay'); alert("Restored. Reload any open tracker to see the data."); }
+      else throw 0;
+    }catch(err){ alert("Restore failed — most likely the database write rules. Check that Firebase Rules allow writes."); }
+  };
+  rd.readAsText(f); e.target.value="";
+}
+ 
+// --- Settings menu + restore confirm ---
+function toggleSet(){ document.getElementById('hubmenu').classList.toggle('open'); }
+function closeSet(){ document.getElementById('hubmenu').classList.remove('open'); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.hicons')) closeSet(); });
+function openOverlay(id){ document.getElementById(id).classList.add('open'); }
+function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+function openRestore(){ closeSet(); document.getElementById('restoreInput').value=''; checkRestore(); openOverlay('restoreOverlay'); }
+function checkRestore(){ document.getElementById('restoreConfirm').disabled = document.getElementById('restoreInput').value.trim().toUpperCase()!=='RESTORE'; }
+function chooseRestoreFile(){ document.getElementById('restoreFile').click(); }
+</script>
+</body>
+</html>
